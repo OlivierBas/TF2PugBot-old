@@ -1,5 +1,5 @@
-﻿using System.Net.Sockets;
-using System.Text;
+﻿using System.Text;
+using System.Text.Json;
 using Discord.WebSocket;
 using TF2PugBot.Extensions;
 using TF2PugBot.Types;
@@ -9,12 +9,14 @@ namespace TF2PugBot.Helpers;
 public static class DataManager
 {
     private static string _token = string.Empty;
+    private const string MEDIMMUNITIES_DB = "medimmunities.json";
+    private const string GUILDTEAMCHANNELS_DB = "guildteamchannels.json";
     
     private static List<MedicImmunePlayer> _medImmunities = new List<MedicImmunePlayer> ();
     private static MedicImmunePlayer[] _temporaryMedicImmunities = new MedicImmunePlayer[2];
 
     private static List<GuildTeamChannelData> _guildTeamChannels = new List<GuildTeamChannelData>();
-    
+
     public static string Token
     {
         get => _token;
@@ -26,14 +28,16 @@ public static class DataManager
             }
         }
     }
-
-
-    public static IReadOnlyCollection<MedicImmunePlayer> TrackedMedImmunities
+    
+    public static IReadOnlyCollection<MedicImmunePlayer> TrackedMedImmunities => _medImmunities.AsReadOnly();
+    
+    static DataManager ()
     {
-        get => _medImmunities.AsReadOnly();
+        RetrieveDb();
+        SaveDb();
     }
 
-    public static void MakePlayerMedImmune (SocketGuildUser player, Team team)
+    public static IReadOnlyCollection<MedicImmunePlayer> GetMedImmunePlayers ()
     {
         List<MedicImmunePlayer> toBeRemoved =_medImmunities.Where(p => p.Added.HoursFromNow() > 12).ToList();
         if (toBeRemoved.Count > 0)
@@ -41,6 +45,13 @@ public static class DataManager
             _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
 
         }
+        SaveDb();
+        return _medImmunities;
+    }
+
+    public static void MakePlayerMedImmune (SocketGuildUser player, Team team)
+    {
+
 
         var medicImmunePlayer = new MedicImmunePlayer()
         {
@@ -59,6 +70,7 @@ public static class DataManager
                 _temporaryMedicImmunities[(int)team] = medicImmunePlayer;
                 break;
         }
+        
     }
 
     public static string GetMedImmunePlayerString ()
@@ -71,62 +83,10 @@ public static class DataManager
         return sb.ToString();
     }
 
-    public static void ClearListOfImmunePlayers (List<MedicImmunePlayer> playersToBeRemoved)
-    {
-        _medImmunities.RemoveAll(m => playersToBeRemoved.Contains(m));
-    }
-    
-    public static void ClearListOfImmunePlayers (List<SocketGuildUser> playersToBeRemoved)
+    public static async Task ClearListOfImmunePlayersAsync (List<SocketGuildUser> playersToBeRemoved)
     {
         _medImmunities.RemoveAll(m => playersToBeRemoved.Select(p => (MedicImmunePlayer)p).Contains(m));
-    }
-
-    public static Team GetTeamChannelTeam (ulong guildId, ulong channelId)
-    {
-        var teamData =_guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
-        if (teamData is not null)
-        {
-            if (teamData.BluTeamVoiceChannelId == channelId)
-            {
-                return Team.BLU;
-            }
-            else if (teamData.RedTeamVoiceChannelId == channelId)
-            {
-                return Team.RED;
-            }
-        }
-
-        return Team.RED;
-    }
-
-    public static ulong? GetTeamChannelId (ulong guildId, Team team)
-    {
-        var teamData = _guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
-
-        if (teamData is not null)
-        {
-            switch (team)
-            {
-                case Team.RED:
-                    return teamData.RedTeamVoiceChannelId;
-                case Team.BLU:
-                    return teamData.BluTeamVoiceChannelId;
-            }
-        }
-
-        return null;
-    }
-    
-    public static bool UpdateGuildTeamChannelData (ulong guildId, Team team, ulong channelId)
-    {
-        var teamData = _guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
-        if (teamData is not null)
-        {
-            return teamData.TryUpdateValue(team, channelId);
-        }
-
-        return false;
-
+        await SaveDbAsync();
     }
 
     public static void InitializeGuildData (SocketGuild guild)
@@ -137,5 +97,144 @@ public static class DataManager
         }
         _guildTeamChannels.Add(new GuildTeamChannelData() {GuildId = guild.Id});
     }
+    
+    public static Team? GetTeamChannelTeam (ulong guildId, ulong channelId)
+    {
+        var teamData =_guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
+        if (teamData is not null)
+        {
+            if (teamData.BluTeamVoiceChannelId == channelId)
+            {
+                return Team.BLU;
+            }
+            
+            if (teamData.RedTeamVoiceChannelId == channelId)
+            {
+                return Team.RED;
+            }
+        }
+
+        return null;
+    }
+
+    public static async Task<bool> UpdateGuildChannelData (ulong guildId, Team team, ulong channelId)
+    {
+        var teamData = _guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
+        if (teamData is not null)
+        {
+            bool success = teamData.TryUpdateValue(team, channelId);
+            if (success)
+            {
+                SaveDb();
+                return success;
+            }
+        }
+
+        return false;
+
+    }
+
+    private static async Task RetrieveDbAsync ()
+    {
+        string medDb   = MEDIMMUNITIES_DB;
+        string guildDb = GUILDTEAMCHANNELS_DB;
+        
+        using (FileStream fs = new FileStream(medDb, FileMode.OpenOrCreate, FileAccess.Read))
+        {
+            using (StreamReader sr = new StreamReader(fs))
+            {
+                string data = await sr.ReadToEndAsync();
+                if (data.Length > 0)
+                {
+                    _medImmunities = JsonSerializer.Deserialize<List<MedicImmunePlayer>>(data)!;
+                }
+            }
+        }
+        
+        using (FileStream fs = new FileStream(guildDb, FileMode.OpenOrCreate, FileAccess.Read))
+        {
+            using (StreamReader sr = new StreamReader(fs))
+            {
+                string data = await sr.ReadToEndAsync();
+                if (data.Length > 0)
+                {
+                    _guildTeamChannels = JsonSerializer.Deserialize<List<GuildTeamChannelData>>(data)!;
+                }
+            }
+        }
+    }
+
+    private static void RetrieveDb ()
+    {
+        string medDb   = MEDIMMUNITIES_DB;
+        string guildDb = GUILDTEAMCHANNELS_DB;
+        
+        using (FileStream fs = new FileStream(medDb, FileMode.OpenOrCreate, FileAccess.Read))
+        {
+            using (StreamReader sr = new StreamReader(fs))
+            {
+                string data = sr.ReadToEnd();
+                if (data.Length > 0)
+                {
+                    _medImmunities = JsonSerializer.Deserialize<List<MedicImmunePlayer>>(data)!;
+                }
+            }
+        }
+        
+        using (FileStream fs = new FileStream(guildDb, FileMode.OpenOrCreate, FileAccess.Read))
+        {
+            using (StreamReader sr = new StreamReader(fs))
+            {
+                string data = sr.ReadToEnd();
+                if (data.Length > 0)
+                {
+                    _guildTeamChannels = JsonSerializer.Deserialize<List<GuildTeamChannelData>>(data)!;
+                }
+            }
+        }
+    }
+
+    private static async Task SaveDbAsync ()
+    {
+        string medDb   = MEDIMMUNITIES_DB;
+        string guildDb = GUILDTEAMCHANNELS_DB;
+        using (FileStream fs = new FileStream(medDb, FileMode.Truncate, FileAccess.Write))
+        {
+            using (StreamWriter sw = new StreamWriter(fs))
+            {
+                await sw.WriteAsync(JsonSerializer.Serialize(_medImmunities));
+            }
+        }
+        
+        using (FileStream fs = new FileStream(guildDb, FileMode.Truncate, FileAccess.Write))
+        {
+            using (StreamWriter sw = new StreamWriter(fs))
+            {
+                await sw.WriteAsync(JsonSerializer.Serialize(_guildTeamChannels));
+            }
+        }
+    }
+
+    private static void SaveDb ()
+    {
+        string medDb   = MEDIMMUNITIES_DB;
+        string guildDb = GUILDTEAMCHANNELS_DB;
+        using (FileStream fs = new FileStream(medDb, FileMode.Truncate, FileAccess.Write))
+        {
+            using (StreamWriter sw = new StreamWriter(fs))
+            {
+                sw.Write(JsonSerializer.Serialize(_medImmunities));
+            }
+        }
+        
+        using (FileStream fs = new FileStream(guildDb, FileMode.Truncate, FileAccess.Write))
+        {
+            using (StreamWriter sw = new StreamWriter(fs))
+            {
+                sw.Write(JsonSerializer.Serialize(_guildTeamChannels));
+            }
+        }
+    }
+
 
 }
