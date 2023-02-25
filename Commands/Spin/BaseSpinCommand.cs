@@ -14,7 +14,15 @@ public abstract class BaseSpinCommand
         int          playersInVoice = connectedVoiceUsers.Count;
         Random       rng            = new Random();
         int          max            = rng.Next(10, 20);
+
+
+        /*if (playersInVoice < 3)
+        {
+            await command.RespondAsync("Too few players to spin.", ephemeral: true);
+            return null;
+        }*/
         
+
         StringBuilder sb = new StringBuilder();
         await command.DeferAsync();
 
@@ -44,6 +52,7 @@ public abstract class BaseSpinCommand
                 }
             }
             embedBuilder.WithDescription(sb.ToString());
+            await command.ModifyOriginalResponseAsync(mp => mp.Embed = embedBuilder.Build());
 
 
 
@@ -79,7 +88,6 @@ public abstract class BaseSpinCommand
                 x++;
             }
 
-            await command.ModifyOriginalResponseAsync(mp => mp.Embed = embedBuilder.Build());
             sb.Clear();
             if (i == max - 1)
             {
@@ -97,6 +105,8 @@ public abstract class BaseSpinCommand
                                      .ToList();
                 return spinWinners;
             }
+
+            Console.WriteLine($"iteration {i} / {max} ");
         }
 
         return null;

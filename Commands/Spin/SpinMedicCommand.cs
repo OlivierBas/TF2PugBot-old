@@ -10,38 +10,51 @@ namespace TF2PugBot.Commands.Spin;
 public class SpinMediCommand : BaseSpinCommand, ICommand
 {
     /// <inheritdoc />
-    public async Task Perform (SocketSlashCommand command, SocketGuildUser caller)
+    public async Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller)
     {
-
+        
         if (caller.IsConnectedToVoice())
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
-
+            int playersInVoice = connectedUsers.Count;
             if (connectedUsers.Count > 6)
             {
                 await command.RespondAsync("More than 6 players, ignoring.", ephemeral: true);
             }
 
-            Team vcTeam = DataManager.GetTeamChannelTeam(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
-            
-            var embedBuilder = new EmbedBuilder();
-            embedBuilder.WithTitle($"Spinning for Medic ({vcTeam.ToString()})!");
-            embedBuilder.WithColor(Color.Red);
-            embedBuilder.WithFooter(DataManager.GetMedImmunePlayerString());
-            
-            List<SocketGuildUser> medSpinners = connectedUsers.Where(cu => DataManager.TrackedMedImmunities.Contains(cu)).ToList();
-            if (medSpinners.Count == connectedUsers.Count)
-            {
-                DataManager.ClearListOfImmunePlayers(medSpinners);
-            }
-            
-            List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo);
+            Team? vcTeam = DataManager.GetTeamChannelTeam(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
 
-            if (winners is not null)
+            if (vcTeam is not null)
             {
-                DataManager.MakePlayerMedImmune(winners[0], vcTeam);
-                await command.FollowupAsync($"<@!{winners[0].Id}> is medic and will be granted med immunity after game end, unless re-spun!");  
+                var embedBuilder = new EmbedBuilder();
+                embedBuilder.WithTitle($"Spinning for {vcTeam.ToString()} Medic!");
+                embedBuilder.WithColor(Color.Red);
+                embedBuilder.WithFooter(DataManager.GetMedImmunePlayerString());
+            
+                List<SocketGuildUser> medSpinners = connectedUsers.Where(cu => !DataManager.GetMedImmunePlayers().Contains(cu)).ToList();
+                if (connectedUsers.Count - medSpinners.Count == playersInVoice)
+                {
+                    await DataManager.ClearListOfImmunePlayersAsync(medSpinners);
+                    medSpinners = connectedUsers.ToList();
+                }
+            
+                List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo);
+
+                if (winners is not null)
+                {
+                    DataManager.MakePlayerMedImmune(winners[0], vcTeam.GetValueOrDefault());
+                    await command.FollowupAsync($"<@!{winners[0].Id}> is {vcTeam.ToString()} medic and will be granted med immunity after game end, unless re-spun!");  
+                }
             }
+            else
+            {
+                await command.RespondAsync(
+                    $"{caller.VoiceChannel.Name} is not set as a team channel and cannot be used for medic spins.",
+                    ephemeral: true);
+                return;
+                
+            }
+            
 
         }
 

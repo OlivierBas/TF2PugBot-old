@@ -8,7 +8,7 @@ namespace TF2PugBot.Commands.Spin;
 public class SpinCaptainsCommand : BaseSpinCommand, ICommand
 {
     /// <inheritdoc />
-    public async Task Perform (SocketSlashCommand command, SocketGuildUser caller)
+    public async Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller)
     {
 
         if (caller.IsConnectedToVoice())
@@ -21,6 +21,7 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             {
                 await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are captains!");
             }
+            return;
         }
 
         await command.RespondAsync("You are not in a voice channel with other players!", ephemeral: true);
