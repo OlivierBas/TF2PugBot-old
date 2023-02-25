@@ -8,6 +8,12 @@ namespace TF2PugBot.Helpers;
 public static class DataManager
 {
     private static string _token = string.Empty;
+    
+    private static List<MedicImmunePlayer> _medImmunities = new List<MedicImmunePlayer> ();
+    private static MedicImmunePlayer[] _temporaryMedicImmunities = new MedicImmunePlayer[2];
+
+    private static List<GuildTeamChannelData> _guildTeamChannels = new List<GuildTeamChannelData>();
+    
     public static string Token
     {
         get => _token;
@@ -62,6 +68,62 @@ public static class DataManager
     {
         _medImmunities.RemoveAll(m => playersToBeRemoved.Select(p => (MedicImmunePlayer)p).Contains(m));
     }
+
+    public static Team GetTeamChannelTeam (ulong guildId, ulong channelId)
+    {
+        var teamData =_guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
+        if (teamData is not null)
+        {
+            if (teamData.BluTeamVoiceChannelId == channelId)
+            {
+                return Team.BLU;
+            }
+            else if (teamData.RedTeamVoiceChannelId == channelId)
+            {
+                return Team.RED;
+            }
+        }
+
+        return Team.RED;
+    }
+
+    public static ulong? GetTeamChannelId (ulong guildId, Team team)
+    {
+        var teamData = _guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
+
+        if (teamData is not null)
+        {
+            switch (team)
+            {
+                case Team.RED:
+                    return teamData.RedTeamVoiceChannelId;
+                case Team.BLU:
+                    return teamData.BluTeamVoiceChannelId;
+            }
+        }
+
+        return null;
+    }
     
+    public static bool UpdateGuildTeamChannelData (ulong guildId, Team team, ulong channelId)
+    {
+        var teamData = _guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
+        if (teamData is not null)
+        {
+            return teamData.TryUpdateValue(team, channelId);
+        }
+
+        return false;
+
+    }
+
+    public static void InitializeGuildData (SocketGuild guild)
+    {
+        if (_guildTeamChannels.Any(g => g.GuildId == guild.Id))
+        {
+            return;
+        }
+        _guildTeamChannels.Add(new GuildTeamChannelData() {GuildId = guild.Id});
+    }
 
 }

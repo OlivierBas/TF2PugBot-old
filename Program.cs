@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using TF2PugBot.Commands.Management;
 using TF2PugBot.Commands.Spin;
 using TF2PugBot.Helpers;
 using TF2PugBot.Types;
@@ -25,8 +26,9 @@ public class Program
         Game g = new Game("IN EPIC MIXES", ActivityType.Competing);
         await _client.SetActivityAsync(g);
 
-        _client.Ready += Client_SetUp;
+        _client.Ready                += Client_SetUp;
         _client.SlashCommandExecuted += Client_CommandHandler;
+        _client.JoinedGuild          += Client_JoinedGuild;
 
         await Task.Delay(-1);
     }
@@ -35,11 +37,6 @@ public class Program
     {
         var devGuild = _client!.GetGuild(654049424439377971);
         var mixGuild = _client!.GetGuild(1058364795063124008);
-        
-        
-        var testingCommand = new SlashCommandBuilder();
-        testingCommand.WithName("testing");
-        testingCommand.WithDescription("Example command");
 
         var captainSpinCommand = new SlashCommandBuilder();
         captainSpinCommand.WithName("spinforcaptain");
@@ -49,21 +46,47 @@ public class Program
         medicSpinCommand.WithName("spinformedic");
         medicSpinCommand.WithDescription("Spin for Medic (Be in Voice Channel)");
 
+
+        var setTeamChannelCommand = new SlashCommandBuilder();
+        setTeamChannelCommand.WithName("configure-channels");
+        setTeamChannelCommand.WithDescription("Set Team channel for Medic Spin");
+        setTeamChannelCommand.AddOption(new SlashCommandOptionBuilder()
+                                        .WithName("team")
+                                        .WithDescription("Sets the specified team's channel")
+                                        .WithType(ApplicationCommandOptionType.SubCommandGroup)
+                                        .AddOption(new SlashCommandOptionBuilder()
+                                                   .WithName("blu")
+                                                   .WithDescription("Set BLU Team's channel")
+                                                   .WithType(ApplicationCommandOptionType.SubCommand)
+                                                   .AddOption("channel", ApplicationCommandOptionType.Channel, "The voice channel to be used for the BLU team", isRequired: true))
+                                        .AddOption(new SlashCommandOptionBuilder()
+                                                   .WithName("red")
+                                                   .WithDescription("Set RED Team's channel")
+                                                   .WithType(ApplicationCommandOptionType.SubCommand)
+                                                   .AddOption("channel", ApplicationCommandOptionType.Channel, "The voice channel to be used for the RED team", isRequired: true))
+                                        );
+
+
         try
         {
-
-            await CommandCreator.CreateCommandAsync(devGuild, testingCommand.Build(), CommandNames.Testing);
             await CommandCreator.CreateCommandAsync(devGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
             await CommandCreator.CreateCommandAsync(devGuild, medicSpinCommand.Build(), CommandNames.MedicSpin);
-            await CommandCreator.CreateCommandAsync(mixGuild, testingCommand.Build(), CommandNames.Testing);
+            await CommandCreator.CreateCommandAsync(devGuild, setTeamChannelCommand.Build(), CommandNames.SetTeamChannel);
+            
             await CommandCreator.CreateCommandAsync(mixGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
             await CommandCreator.CreateCommandAsync(mixGuild, medicSpinCommand.Build(), CommandNames.MedicSpin);
             
         }
-        catch (CommandException ex)
+        catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
+
+        foreach (var joinedGuild in _client.Guilds)
+        {
+            DataManager.InitializeGuildData(joinedGuild);
+        }
+
         Console.WriteLine($"Client is running and listening in {_client.Guilds.Count} guilds!");
     }
 
@@ -83,12 +106,20 @@ public class Program
             case CommandNames.MedicSpin:
                 await new SpinMediCommand().Perform(command, caller);
                 break;
+            case CommandNames.SetTeamChannel:
+                await new ConfigureTeamChannelCommand().Perform(command, caller);
+                break;
             
             
             /*case CommandNames.Testing:
                 await command.RespondAsync("Testing!");
                 break;*/
         }
+    }
+
+    private async Task Client_JoinedGuild (SocketGuild guild)
+    {
+        DataManager.InitializeGuildData(guild);
     }
     
 }

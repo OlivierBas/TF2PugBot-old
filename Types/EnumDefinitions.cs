@@ -13,3 +13,9 @@ public enum SpinMode
     Solo,
     Duo
 }
+
+public enum Team
+{
+    RED,
+    BLU
+}
