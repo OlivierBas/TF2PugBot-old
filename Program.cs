@@ -79,7 +79,7 @@ public class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.Message + "" + ex.StackTrace);
         }
 
         foreach (var joinedGuild in _client.Guilds)
@@ -94,27 +94,31 @@ public class Program
     {
         SocketGuildUser caller = _client!.GetGuild(command.GuildId.GetValueOrDefault()).GetUser(command.User.Id);
 
-        switch (CommandHandler.GetCommandName(command))
+        try
         {
-            default:
-            case CommandNames.NotFound:
-                Console.WriteLine($"{command.CommandName} was attempted to execute, it does not exist or is not assigned a CommandName");
-                break;
-            case CommandNames.CaptainSpin:
-                await new SpinCaptainsCommand().Perform(command, caller);
-                break;
-            case CommandNames.MedicSpin:
-                await new SpinMediCommand().Perform(command, caller);
-                break;
-            case CommandNames.SetTeamChannel:
-                await new ConfigureTeamChannelCommand().Perform(command, caller);
-                break;
-            
-            
-            /*case CommandNames.Testing:
-                await command.RespondAsync("Testing!");
-                break;*/
+            switch (CommandHandler.GetCommandName(command))
+            {
+                default:
+                case CommandNames.NotFound:
+                    Console.WriteLine(
+                        $"{command.CommandName} was attempted to execute, it does not exist or is not assigned a CommandName");
+                    break;
+                case CommandNames.CaptainSpin:
+                    await new SpinCaptainsCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.MedicSpin:
+                    await new SpinMediCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.SetTeamChannel:
+                    await new ConfigureTeamChannelCommand().PerformAsync(command, caller);
+                    break;
+            }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
     }
 
     private async Task Client_JoinedGuild (SocketGuild guild)
