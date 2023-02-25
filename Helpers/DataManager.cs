@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net.Sockets;
+using System.Text;
 using Discord.WebSocket;
 using TF2PugBot.Extensions;
 using TF2PugBot.Types;
@@ -26,13 +27,13 @@ public static class DataManager
         }
     }
 
-    private static List<MedicImmunePlayer> _medImmunities = new List<MedicImmunePlayer> ();
+
     public static IReadOnlyCollection<MedicImmunePlayer> TrackedMedImmunities
     {
         get => _medImmunities.AsReadOnly();
     }
 
-    public static void MakePlayerMedImmune (SocketGuildUser player)
+    public static void MakePlayerMedImmune (SocketGuildUser player, Team team)
     {
         List<MedicImmunePlayer> toBeRemoved =_medImmunities.Where(p => p.Added.HoursFromNow() > 12).ToList();
         if (toBeRemoved.Count > 0)
@@ -40,13 +41,24 @@ public static class DataManager
             _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
 
         }
-        
-        _medImmunities.Add(new MedicImmunePlayer()
+
+        var medicImmunePlayer = new MedicImmunePlayer()
         {
             DisplayName = player.DisplayName,
-            Id = player.Id,
-            Added = DateTime.Now
-        });
+            Id          = player.Id,
+            GuildId     = player.Guild.Id,
+            Added       = DateTime.Now
+        };
+        
+        switch (team)
+        {
+            case Team.RED:
+                _temporaryMedicImmunities[(int)team] = medicImmunePlayer;
+                break;
+            case Team.BLU:
+                _temporaryMedicImmunities[(int)team] = medicImmunePlayer;
+                break;
+        }
     }
 
     public static string GetMedImmunePlayerString ()

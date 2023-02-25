@@ -3,9 +3,9 @@
 public enum CommandNames
 {
     NotFound,
-    Testing,
     CaptainSpin,
-    MedicSpin
+    MedicSpin,
+    SetTeamChannel,
 }
 
 public enum SpinMode

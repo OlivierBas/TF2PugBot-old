@@ -14,16 +14,10 @@ public abstract class BaseSpinCommand
         int          playersInVoice = connectedVoiceUsers.Count;
         Random       rng            = new Random();
         int          max            = rng.Next(10, 20);
-
-
-        if (playersInVoice < 3)
-        {
-            await command.RespondAsync("Too few players in voice channel to spin!", ephemeral: true);
-            return null;
-        }
-
+        
         StringBuilder sb = new StringBuilder();
         await command.DeferAsync();
+
         for (int i = 0, y = 0, x = playersInVoice / 2; i < max; i++)
         {
             if (y == playersInVoice)
@@ -49,10 +43,10 @@ public abstract class BaseSpinCommand
                     sb.AppendLine(player);
                 }
             }
-
-
             embedBuilder.WithDescription(sb.ToString());
-            await command.ModifyOriginalResponseAsync(mp => mp.Embed = embedBuilder.Build());
+
+
+
             /*if (rng.Next(0, 20) % 2 == 0)
             {
                 y++;
@@ -85,6 +79,7 @@ public abstract class BaseSpinCommand
                 x++;
             }
 
+            await command.ModifyOriginalResponseAsync(mp => mp.Embed = embedBuilder.Build());
             sb.Clear();
             if (i == max - 1)
             {

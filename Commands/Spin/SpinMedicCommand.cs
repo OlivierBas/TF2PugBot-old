@@ -21,12 +21,14 @@ public class SpinMediCommand : BaseSpinCommand, ICommand
             {
                 await command.RespondAsync("More than 6 players, ignoring.", ephemeral: true);
             }
+
+            Team vcTeam = DataManager.GetTeamChannelTeam(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
             
             var embedBuilder = new EmbedBuilder();
-            embedBuilder.WithTitle("Spinning for Medic!");
+            embedBuilder.WithTitle($"Spinning for Medic ({vcTeam.ToString()})!");
             embedBuilder.WithColor(Color.Red);
             embedBuilder.WithFooter(DataManager.GetMedImmunePlayerString());
-
+            
             List<SocketGuildUser> medSpinners = connectedUsers.Where(cu => DataManager.TrackedMedImmunities.Contains(cu)).ToList();
             if (medSpinners.Count == connectedUsers.Count)
             {
@@ -34,17 +36,13 @@ public class SpinMediCommand : BaseSpinCommand, ICommand
             }
             
             List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo);
-            
-            if (winners is null || winners.Count == 0)
-            {
-                await command.FollowupAsync("Something went wrong YELL AT BASS!");
-            }
-            else
-            {
-                DataManager.MakePlayerMedImmune(winners[0]);
-                await command.FollowupAsync($"<@!{winners[0].Id}> is medic and will be granted med immunity after game end, unless re-spun!");
 
+            if (winners is not null)
+            {
+                DataManager.MakePlayerMedImmune(winners[0], vcTeam);
+                await command.FollowupAsync($"<@!{winners[0].Id}> is medic and will be granted med immunity after game end, unless re-spun!");  
             }
+
         }
 
         await command.RespondAsync("You are not in a voice channel with other players!", ephemeral: true);

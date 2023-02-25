@@ -17,14 +17,9 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             embedBuilder.WithTitle("Spinning for Team Captain!");
             embedBuilder.WithColor(Color.Teal);
             List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder, SpinMode.Duo);
-            if (winners is null || winners.Count < 2)
-            {
-                await command.FollowupAsync("Something went wrong YELL AT BASS!");
-            }
-            else
+            if(winners is not null)
             {
                 await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are captains!");
-
             }
         }
 
