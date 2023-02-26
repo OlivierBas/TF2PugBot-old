@@ -13,21 +13,24 @@ public abstract class BaseSpinCommand
         List<string> players        = connectedVoiceUsers.Select(cu => cu.DisplayName).ToList();
         int          playersInVoice = connectedVoiceUsers.Count;
         Random       rng            = new Random();
-        int          max            = rng.Next(10, 20);
+        int          max            = rng.Next(5, 30);
 
 
-        /*if (playersInVoice < 3)
+        if (playersInVoice < 3)
         {
             await command.RespondAsync("Too few players to spin.", ephemeral: true);
             return null;
-        }*/
-        
+        }
 
-        StringBuilder sb = new StringBuilder();
+        bool          lastIteration = false;
+        StringBuilder sb            = new StringBuilder();
         await command.DeferAsync();
 
         for (int i = 0, y = 0, x = playersInVoice / 2; i < max; i++)
         {
+            
+            await Task.Delay(50);
+            lastIteration = !(i < max - 1);
             if (y == playersInVoice)
             {
                 y = 0;
@@ -37,44 +40,9 @@ public abstract class BaseSpinCommand
             {
                 x = 0;
             }
+            
 
-
-            foreach (var player in players)
-            {
-                if (players[x] == player
-                 || (spinMode == SpinMode.Duo && players[y] == player))
-                {
-                    sb.AppendLine("-> " + $"**{player}**");
-                }
-                else
-                {
-                    sb.AppendLine(player);
-                }
-            }
-            embedBuilder.WithDescription(sb.ToString());
-            await command.ModifyOriginalResponseAsync(mp => mp.Embed = embedBuilder.Build());
-
-
-
-            /*if (rng.Next(0, 20) % 2 == 0)
-            {
-                y++;
-                if (y == x)
-                {
-                    y++;
-                }
-            }
-            else if (rng.Next(0, 20) % 2 == 0)
-            {
-
-                x++;
-                if (x == y)
-                {
-                    x++;
-                }
-            }*/
-
-            if (spinMode == SpinMode.Duo && i % 2 == 0)
+            if (spinMode == SpinMode.Duo && (i % 2 == 0 || rng.Next(0, 2) == 1))
             {
                 y++;
             }
@@ -87,9 +55,40 @@ public abstract class BaseSpinCommand
             {
                 x++;
             }
+            
+            if (y == playersInVoice)
+            {
+                y = 0;
+            }
 
-            sb.Clear();
-            if (i == max - 1)
+            if (x == playersInVoice)
+            {
+                x = 0;
+            }
+            
+            foreach (var player in players)
+            {
+                if (players[x] == player
+                 || (spinMode == SpinMode.Duo && players[y] == player))
+                {
+                    if (lastIteration)
+                    {
+                        sb.AppendLine("-> " + $"**{player}**" + " <-");
+                    }
+                    else
+                    {
+                        sb.AppendLine("-> " + $"{player}" + " <-");
+                    }
+                }
+                else
+                {
+                    sb.AppendLine(player);
+                }
+            }
+            embedBuilder.WithDescription(sb.ToString());
+            await command.ModifyOriginalResponseAsync(mp => mp.Embed = embedBuilder.Build());
+            
+            if (lastIteration)
             {
 
                 if (spinMode == SpinMode.Duo)
@@ -105,6 +104,8 @@ public abstract class BaseSpinCommand
                                      .ToList();
                 return spinWinners;
             }
+            
+            sb.Clear();
 
             Console.WriteLine($"iteration {i} / {max} ");
         }
