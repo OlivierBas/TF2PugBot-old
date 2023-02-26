@@ -38,7 +38,7 @@ public class SpinMediCommand : BaseSpinCommand, ICommand
                     medSpinners = connectedUsers.ToList();
                 }
             
-                List<SocketGuildUser>? winners = await Task.Run(() => Spin(command, medSpinners, embedBuilder, SpinMode.Solo)) ;
+                List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo);
 
                 if (winners is not null)
                 {
