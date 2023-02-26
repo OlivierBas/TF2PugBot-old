@@ -65,6 +65,11 @@ public class Program
                                                    .WithType(ApplicationCommandOptionType.SubCommand)
                                                    .AddOption("channel", ApplicationCommandOptionType.Channel, "The voice channel to be used for the RED team", isRequired: true))
                                         );
+        
+        var setManagementRoleCommand = new SlashCommandBuilder();
+        setManagementRoleCommand.WithName("configure-admins");
+        setManagementRoleCommand.WithDescription("Set Admin Role for bot management");
+        setManagementRoleCommand.AddOption("role", ApplicationCommandOptionType.Role, "The role that is able to configure this bot and grant or revoke immunities", isRequired: true);
 
 
         try
@@ -72,6 +77,7 @@ public class Program
             await CommandCreator.CreateCommandAsync(devGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
             await CommandCreator.CreateCommandAsync(devGuild, medicSpinCommand.Build(), CommandNames.MedicSpin);
             await CommandCreator.CreateCommandAsync(devGuild, setTeamChannelCommand.Build(), CommandNames.SetTeamChannel);
+            await CommandCreator.CreateCommandAsync(devGuild, setManagementRoleCommand.Build(), CommandNames.SetAdminRole);
             
             await CommandCreator.CreateCommandAsync(mixGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
             await CommandCreator.CreateCommandAsync(mixGuild, medicSpinCommand.Build(), CommandNames.MedicSpin);
@@ -93,7 +99,6 @@ public class Program
     private async Task Client_CommandHandler (SocketSlashCommand command)
     {
         SocketGuildUser caller = _client!.GetGuild(command.GuildId.GetValueOrDefault()).GetUser(command.User.Id);
-
         try
         {
             switch (CommandHandler.GetCommandName(command))
@@ -111,6 +116,9 @@ public class Program
                     break;
                 case CommandNames.SetTeamChannel:
                     await new ConfigureTeamChannelCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.SetAdminRole:
+                    await new ConfigureAdminRoleCommand().PerformAsync(command, caller);
                     break;
             }
         }
