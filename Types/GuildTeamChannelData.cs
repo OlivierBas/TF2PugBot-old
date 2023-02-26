@@ -1,20 +1,28 @@
-﻿namespace TF2PugBot.Types;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
+
+namespace TF2PugBot.Types;
 
 public class GuildTeamChannelData
 {
+
     private ulong? _redTeamVoiceChannelId;
     private ulong? _bluTeamVoiceChannelId;
     
     public ulong GuildId { get; set; } = default;
 
+
     public ulong? RedTeamVoiceChannelId
     {
         get => _redTeamVoiceChannelId;
+        set => TryUpdateValue(Team.RED, value.GetValueOrDefault());
     }
+
 
     public ulong? BluTeamVoiceChannelId
     {
         get => _bluTeamVoiceChannelId;
+        set => TryUpdateValue(Team.BLU, value.GetValueOrDefault());
     }
 
     public bool TryUpdateValue (Team team, ulong channelId)
