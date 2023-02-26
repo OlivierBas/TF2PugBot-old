@@ -46,6 +46,12 @@ public class SpinMediCommand : BaseSpinCommand, ICommand
                     await command.FollowupAsync($"<@!{winners[0].Id}> is {vcTeam.ToString()} medic and will be granted med immunity after game end, unless re-spun!");  
                     //await command.FollowupAsync($"winner!");  
                 }
+                else
+                {
+                    await command.FollowupAsync("Something went HORRIBLY wrong.");
+                }
+
+                return;
             }
             else
             {

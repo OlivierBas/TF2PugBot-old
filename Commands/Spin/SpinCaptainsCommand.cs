@@ -22,6 +22,10 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
                  await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
                 // await command.FollowupAsync($"winner");
             }
+            else
+            {
+                await command.FollowupAsync("Something went HORRIBLY wrong");
+            }
             return;
         }
 
