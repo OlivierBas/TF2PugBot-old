@@ -78,7 +78,7 @@ public static class DataManager
 
     public static IReadOnlyCollection<MedicImmunePlayer> GetMedImmunePlayers (ulong? guildId)
     {
-        List<MedicImmunePlayer> toBeRemoved =_medImmunities.Where(p => p.Added.HoursFromNow() > 12 && p.GuildId == guildId).ToList();
+        List<MedicImmunePlayer> toBeRemoved =_medImmunities.Where(p => p.Added.HoursFromNow() < 0 && p.GuildId == guildId).ToList();
         if (toBeRemoved.Count > 0)
         {
             _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
