@@ -22,7 +22,7 @@ public class SpinMediCommand : BaseSpinCommand, ICommand
                 await command.RespondAsync("More than 6 players, ignoring.", ephemeral: true);
             }
 
-            Team? vcTeam = DataManager.GetTeamChannelTeam(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
+            Team? vcTeam = DataManager.GetGuildTeamChannel(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
 
             if (vcTeam is not null)
             {
