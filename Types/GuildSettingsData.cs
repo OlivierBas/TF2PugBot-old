@@ -3,11 +3,12 @@ using Newtonsoft.Json;
 
 namespace TF2PugBot.Types;
 
-public class GuildTeamChannelData
+public class GuildSettingsData
 {
 
     private ulong? _redTeamVoiceChannelId;
     private ulong? _bluTeamVoiceChannelId;
+    private ulong? _adminRoleId;
     
     public ulong GuildId { get; set; } = default;
 
@@ -23,6 +24,12 @@ public class GuildTeamChannelData
     {
         get => _bluTeamVoiceChannelId;
         set => TryUpdateValue(Team.BLU, value.GetValueOrDefault());
+    }
+
+    public ulong? AdminRoleId
+    {
+        get => _adminRoleId;
+        set => _adminRoleId = value;
     }
 
     public bool TryUpdateValue (Team team, ulong channelId)
