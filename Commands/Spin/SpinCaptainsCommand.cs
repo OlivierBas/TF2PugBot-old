@@ -24,8 +24,10 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             }
             else
             {
-                await command.FollowupAsync("Something went HORRIBLY wrong");
+                await command.FollowupAsync("Something went HORRIBLY wrong.", ephemeral: true);
+                
             }
+            
             return;
         }
 
