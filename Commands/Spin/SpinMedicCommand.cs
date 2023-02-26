@@ -38,17 +38,13 @@ public class SpinMediCommand : BaseSpinCommand, ICommand
                     medSpinners = connectedUsers.ToList();
                 }
             
-                List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo);
+                List<SocketGuildUser>? winners = await Task.Run(() => Spin(command, medSpinners, embedBuilder, SpinMode.Solo)) ;
 
                 if (winners is not null)
                 {
                     DataManager.MakePlayerMedImmune(winners[0], vcTeam.GetValueOrDefault());
                     await command.FollowupAsync($"<@!{winners[0].Id}> is {vcTeam.ToString()} medic and will be granted med immunity after game end, unless re-spun!");  
                     //await command.FollowupAsync($"winner!");  
-                }
-                else
-                {
-                    await command.FollowupAsync("Something went HORRIBLY wrong.", ephemeral: true);
                 }
 
                 return;
