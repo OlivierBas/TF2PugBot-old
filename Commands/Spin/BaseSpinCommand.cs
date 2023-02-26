@@ -13,7 +13,7 @@ public abstract class BaseSpinCommand
         List<string> players        = connectedVoiceUsers.Select(cu => cu.DisplayName).ToList();
         int          playersInVoice = connectedVoiceUsers.Count;
         Random       rng            = new Random();
-        int          max            = rng.Next(5, 30);
+        int          max            = rng.Next(14, 34);
 
 
         if (playersInVoice < 3)

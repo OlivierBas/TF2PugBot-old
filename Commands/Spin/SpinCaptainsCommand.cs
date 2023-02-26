@@ -19,7 +19,7 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder, SpinMode.Duo);
             if(winners is not null)
             {
-                 await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are captains!");
+                 await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
                 // await command.FollowupAsync($"winner");
             }
             return;
