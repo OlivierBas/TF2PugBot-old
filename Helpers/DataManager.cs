@@ -34,12 +34,11 @@ public static class DataManager
     static DataManager ()
     {
         RetrieveDb();
-        SaveDb();
     }
 
-    public static IReadOnlyCollection<MedicImmunePlayer> GetMedImmunePlayers ()
+    public static IReadOnlyCollection<MedicImmunePlayer> GetMedImmunePlayers (ulong? guildId)
     {
-        List<MedicImmunePlayer> toBeRemoved =_medImmunities.Where(p => p.Added.HoursFromNow() > 12).ToList();
+        List<MedicImmunePlayer> toBeRemoved =_medImmunities.Where(p => p.Added.HoursFromNow() > 12 && p.GuildId == guildId).ToList();
         if (toBeRemoved.Count > 0)
         {
             _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
@@ -51,8 +50,6 @@ public static class DataManager
 
     public static void MakePlayerMedImmune (SocketGuildUser player, Team team)
     {
-
-
         var medicImmunePlayer = new MedicImmunePlayer()
         {
             DisplayName = player.DisplayName,
@@ -73,12 +70,27 @@ public static class DataManager
         
     }
 
-    public static string GetMedImmunePlayerString ()
+    public static async Task MakePermanentImmunitiesAsync ()
+    {
+        foreach (var medicImmunePlayer in _medImmunities)
+        {
+            if (_medImmunities.Contains(medicImmunePlayer))
+            {
+                _medImmunities.FirstOrDefault(p => p.Id == medicImmunePlayer.Id && p.GuildId == medicImmunePlayer.GuildId)!.Added = DateTime.Now;
+                continue;
+            }
+            _medImmunities.Add(medicImmunePlayer);
+        }
+
+        await SaveDbAsync();
+    }
+
+    public static string GetMedImmunePlayerString (ulong? guildId)
     {
         StringBuilder sb = new StringBuilder();
-        foreach (var player in _medImmunities)
+        foreach (var player in _medImmunities.Where(p => p.GuildId == guildId))
         {
-            sb.Append($"{player.DisplayName} has med immunity for {12 - player.Added.HoursFromNow()} hours");
+            sb.Append($"{player.DisplayName} has med immunity for {12 - player.Added.HoursFromNow()} hours\n");
         }
         return sb.ToString();
     }
@@ -125,7 +137,7 @@ public static class DataManager
             bool success = teamData.TryUpdateValue(team, channelId);
             if (success)
             {
-                SaveDb();
+                await SaveDbAsync();
                 return success;
             }
         }
@@ -202,7 +214,8 @@ public static class DataManager
         {
             using (StreamWriter sw = new StreamWriter(fs))
             {
-                await sw.WriteAsync(JsonSerializer.Serialize(_medImmunities));
+                var storedImmunities =_medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
+                await sw.WriteAsync(JsonSerializer.Serialize(storedImmunities));
             }
         }
         
@@ -223,7 +236,8 @@ public static class DataManager
         {
             using (StreamWriter sw = new StreamWriter(fs))
             {
-                sw.Write(JsonSerializer.Serialize(_medImmunities));
+                var storedImmunities =_medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
+                sw.Write(JsonSerializer.Serialize(storedImmunities));
             }
         }
         
