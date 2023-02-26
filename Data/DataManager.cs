@@ -11,11 +11,12 @@ public static class DataManager
     private static string _token = string.Empty;
     private const string MEDIMMUNITIES_DB = "medimmunities.json";
     private const string GUILDTEAMCHANNELS_DB = "guildteamchannels.json";
+    private const ulong DEV_ID = 624280077982629888;
     
     private static List<MedicImmunePlayer> _medImmunities = new List<MedicImmunePlayer> ();
     private static MedicImmunePlayer[] _temporaryMedicImmunities = new MedicImmunePlayer[2];
 
-    private static List<GuildTeamChannelData> _guildTeamChannels = new List<GuildTeamChannelData>();
+    private static List<GuildSettingsData> _guildSettingsData = new List<GuildSettingsData>();
 
     public static string Token
     {
@@ -34,6 +35,45 @@ public static class DataManager
     static DataManager ()
     {
         RetrieveDb();
+    }
+
+    public static bool HasAccessToCommand (ulong? guildId, SocketGuildUser caller)
+    {
+        var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildData is not null)
+        {
+            if (caller.Roles.Any(r => r.Id == guildData.AdminRoleId))
+            {
+                return true;
+            }
+
+            if (caller.Roles.Any(r => r.Permissions.Administrator == true))
+            {
+                return true;
+            }
+
+            if (caller.Guild.OwnerId == caller.Id)
+            {
+                return true;
+            }
+
+            if (caller.Id == DEV_ID)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static async Task SetAdminRole (ulong? guildId, SocketRole role)
+    {
+        var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildData is not null)
+        {
+            guildData.AdminRoleId = role.Id;
+            await SaveDbAsync();
+        }
     }
 
     public static IReadOnlyCollection<MedicImmunePlayer> GetMedImmunePlayers (ulong? guildId)
@@ -103,24 +143,24 @@ public static class DataManager
 
     public static void InitializeGuildData (SocketGuild guild)
     {
-        if (_guildTeamChannels.Any(g => g.GuildId == guild.Id))
+        if (_guildSettingsData.Any(g => g.GuildId == guild.Id))
         {
             return;
         }
-        _guildTeamChannels.Add(new GuildTeamChannelData() {GuildId = guild.Id});
+        _guildSettingsData.Add(new GuildSettingsData() {GuildId = guild.Id});
     }
     
-    public static Team? GetTeamChannelTeam (ulong guildId, ulong channelId)
+    public static Team? GetGuildTeamChannel (ulong guildId, ulong channelId)
     {
-        var teamData =_guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
-        if (teamData is not null)
+        var guildData =_guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildData is not null)
         {
-            if (teamData.BluTeamVoiceChannelId == channelId)
+            if (guildData.BluTeamVoiceChannelId == channelId)
             {
                 return Team.BLU;
             }
             
-            if (teamData.RedTeamVoiceChannelId == channelId)
+            if (guildData.RedTeamVoiceChannelId == channelId)
             {
                 return Team.RED;
             }
@@ -131,10 +171,10 @@ public static class DataManager
 
     public static async Task<bool> UpdateGuildChannelData (ulong guildId, Team team, ulong channelId)
     {
-        var teamData = _guildTeamChannels.FirstOrDefault(g => g.GuildId == guildId);
-        if (teamData is not null)
+        var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildData is not null)
         {
-            bool success = teamData.TryUpdateValue(team, channelId);
+            bool success = guildData.TryUpdateValue(team, channelId);
             if (success)
             {
                 await SaveDbAsync();
@@ -170,7 +210,7 @@ public static class DataManager
                 string data = await sr.ReadToEndAsync();
                 if (data.Length > 0)
                 {
-                    _guildTeamChannels = JsonSerializer.Deserialize<List<GuildTeamChannelData>>(data)!;
+                    _guildSettingsData = JsonSerializer.Deserialize<List<GuildSettingsData>>(data)!;
                 }
             }
         }
@@ -200,7 +240,7 @@ public static class DataManager
                 string data = sr.ReadToEnd();
                 if (data.Length > 0)
                 {
-                    _guildTeamChannels = JsonSerializer.Deserialize<List<GuildTeamChannelData>>(data)!;
+                    _guildSettingsData = JsonSerializer.Deserialize<List<GuildSettingsData>>(data)!;
                 }
             }
         }
@@ -223,7 +263,7 @@ public static class DataManager
         {
             using (StreamWriter sw = new StreamWriter(fs))
             {
-                await sw.WriteAsync(JsonSerializer.Serialize(_guildTeamChannels));
+                await sw.WriteAsync(JsonSerializer.Serialize(_guildSettingsData));
             }
         }
     }
@@ -245,7 +285,7 @@ public static class DataManager
         {
             using (StreamWriter sw = new StreamWriter(fs))
             {
-                sw.Write(JsonSerializer.Serialize(_guildTeamChannels));
+                sw.Write(JsonSerializer.Serialize(_guildSettingsData));
             }
         }
     }
