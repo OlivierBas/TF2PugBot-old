@@ -1,9 +1,9 @@
 ﻿using Discord;
-using Discord.Commands;
 using Discord.WebSocket;
 using TF2PugBot.Commands.Management;
 using TF2PugBot.Commands.Modify;
 using TF2PugBot.Commands.Spin;
+using TF2PugBot.Data;
 using TF2PugBot.Helpers;
 using TF2PugBot.Types;
 
@@ -12,19 +12,44 @@ namespace TF2PugBot;
 public class Program
 {
     private DiscordSocketClient? _client;
-
+    private static ulong? _devGuildId;
     public static Task Main (string[] args)
-    {
-        DataManager.Token = args[0];
+    {        
+        Console.Clear();
+        if (String.IsNullOrEmpty(EasySetup.Token))
+        {
+            DataManager.Token = args[0];
+            if (ulong.TryParse(args[1], out ulong guildId))
+            {
+                _devGuildId = guildId;
+            }
+            if (ulong.TryParse(args[2], out ulong devId))
+            {
+                DataManager.DevId = devId;
+            }
+            if (bool.TryParse(args[3], out bool instantSpin))
+            {
+                DataManager.InstantSpin = instantSpin;
+            }
+        }
+        else
+        {
+            DataManager.Token       = EasySetup.Token;
+            DataManager.InstantSpin = EasySetup.InstantSpins;
+            DataManager.DevId       = EasySetup.OwnerId;
+            _devGuildId             = EasySetup.DiscordServerId;
+        }
+        
         return new Program().MainAsync();
     }
 
     private async Task MainAsync ()
     {
+        Console.WriteLine("Starting bot..");
         _client = new DiscordSocketClient();
         await _client.LoginAsync(TokenType.Bot, DataManager.Token);
         await _client.StartAsync();
-        Game g = new Game("IN EPIC MIXES", ActivityType.Competing);
+        Game g = new Game(EasySetup.ActivityText, EasySetup.ActivityType);
         await _client.SetActivityAsync(g);
 
         _client.Ready                += Client_SetUp;
@@ -36,8 +61,12 @@ public class Program
 
     private async Task Client_SetUp ()
     {
-        var devGuild = _client!.GetGuild(654049424439377971);
-        var mixGuild = _client!.GetGuild(1058364795063124008);
+        if (_devGuildId is null)
+        {
+            throw new Exception("Dev Guild Id is not set, use Args[1] or EasySetup.cs");
+        }
+        var devGuild = _client!.GetGuild(_devGuildId.GetValueOrDefault());
+
 
         var captainSpinCommand = new SlashCommandBuilder();
         captainSpinCommand.WithName("spinforcaptain");
@@ -89,7 +118,7 @@ public class Program
                                         .AddOption("user", ApplicationCommandOptionType.User,
                                                    "The user to revoke medic immunity from", isRequired: true));
 
-        modifyImmunityCommand.AddOption("get", ApplicationCommandOptionType.SubCommand, "Check all the medic immune players", isRequired: true);
+        modifyImmunityCommand.AddOption("get", ApplicationCommandOptionType.SubCommand, "Check all the medic immune players");
 
         try
         {
@@ -98,10 +127,13 @@ public class Program
             await CommandCreator.CreateCommandAsync(devGuild, setTeamChannelCommand.Build(), CommandNames.SetTeamChannel);
             await CommandCreator.CreateCommandAsync(devGuild, setManagementRoleCommand.Build(), CommandNames.SetAdminRole);
             await CommandCreator.CreateCommandAsync(devGuild, modifyImmunityCommand.Build(), CommandNames.ModifyMedicImmunity);
-            
-            await CommandCreator.CreateCommandAsync(mixGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
-            await CommandCreator.CreateCommandAsync(mixGuild, medicSpinCommand.Build(), CommandNames.MedicSpin);
-            
+
+            await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(medicSpinCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(setTeamChannelCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(setManagementRoleCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(modifyImmunityCommand.Build());
+
         }
         catch (Exception ex)
         {
@@ -110,10 +142,10 @@ public class Program
 
         foreach (var joinedGuild in _client.Guilds)
         {
-            DataManager.InitializeGuildData(joinedGuild);
+            await DataManager.InitializeGuildDataAsync(joinedGuild);
         }
 
-        Console.WriteLine($"Client is running and listening in {_client.Guilds.Count} guilds!");
+        Console.WriteLine($"Bot is running in {_client.Guilds.Count} guilds!");
     }
 
     private async Task Client_CommandHandler (SocketSlashCommand command)
@@ -126,13 +158,13 @@ public class Program
                 default:
                 case CommandNames.NotFound:
                     Console.WriteLine(
-                        $"{command.CommandName} was attempted to execute, it does not exist or is not assigned a CommandName");
+                        $"{command.CommandName} was attempted to execute, but it does not exist or is not assigned a CommandName");
                     break;
                 case CommandNames.CaptainSpin:
                     await new SpinCaptainsCommand().PerformAsync(command, caller);
                     break;
                 case CommandNames.MedicSpin:
-                    await new SpinMediCommand().PerformAsync(command, caller);
+                    await new SpinMedicCommand().PerformAsync(command, caller);
                     break;
                 case CommandNames.SetTeamChannel:
                     await new ConfigureTeamChannelCommand().PerformAsync(command, caller);
@@ -154,7 +186,7 @@ public class Program
 
     private async Task Client_JoinedGuild (SocketGuild guild)
     {
-        DataManager.InitializeGuildData(guild);
+        await DataManager.InitializeGuildDataAsync(guild);
     }
     
 }
