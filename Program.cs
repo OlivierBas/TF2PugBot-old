@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.WebSocket;
 using TF2PugBot.Commands.Management;
+using TF2PugBot.Commands.Modify;
 using TF2PugBot.Commands.Spin;
 using TF2PugBot.Helpers;
 using TF2PugBot.Types;
@@ -72,12 +73,31 @@ public class Program
         setManagementRoleCommand.AddOption("role", ApplicationCommandOptionType.Role, "The role that is able to configure this bot and grant or revoke immunities", isRequired: true);
 
 
+        var modifyImmunityCommand = new SlashCommandBuilder();
+        modifyImmunityCommand.WithName("immunity");
+        modifyImmunityCommand.WithDescription("Grant or Revoke medic immunities"); 
+        modifyImmunityCommand.AddOption(new SlashCommandOptionBuilder()
+                                         .WithName("grant")
+                                         .WithDescription("Grant medic immunity")
+                                         .WithType(ApplicationCommandOptionType.SubCommand)
+                                         .AddOption("user", ApplicationCommandOptionType.User,
+                                                    "The user to be given med immunity for 12 hours.", isRequired: true));
+        modifyImmunityCommand.AddOption(new SlashCommandOptionBuilder()
+                                        .WithName("revoke")
+                                        .WithDescription("Revoke medic immunity")
+                                        .WithType(ApplicationCommandOptionType.SubCommand)
+                                        .AddOption("user", ApplicationCommandOptionType.User,
+                                                   "The user to revoke medic immunity from", isRequired: true));
+
+        modifyImmunityCommand.AddOption("get", ApplicationCommandOptionType.SubCommand, "Check all the medic immune players", isRequired: true);
+
         try
         {
             await CommandCreator.CreateCommandAsync(devGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
             await CommandCreator.CreateCommandAsync(devGuild, medicSpinCommand.Build(), CommandNames.MedicSpin);
             await CommandCreator.CreateCommandAsync(devGuild, setTeamChannelCommand.Build(), CommandNames.SetTeamChannel);
             await CommandCreator.CreateCommandAsync(devGuild, setManagementRoleCommand.Build(), CommandNames.SetAdminRole);
+            await CommandCreator.CreateCommandAsync(devGuild, modifyImmunityCommand.Build(), CommandNames.ModifyMedicImmunity);
             
             await CommandCreator.CreateCommandAsync(mixGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
             await CommandCreator.CreateCommandAsync(mixGuild, medicSpinCommand.Build(), CommandNames.MedicSpin);
@@ -119,6 +139,9 @@ public class Program
                     break;
                 case CommandNames.SetAdminRole:
                     await new ConfigureAdminRoleCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.ModifyMedicImmunity:
+                    await new ModifyMedImmunityCommand().PerformAsync(command, caller);
                     break;
             }
         }
