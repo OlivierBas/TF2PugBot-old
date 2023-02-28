@@ -7,103 +7,142 @@ namespace TF2PugBot.Commands.Spin;
 
 public abstract class BaseSpinCommand
 {
-    protected async Task<List<SocketGuildUser>?> Spin (SocketSlashCommand command, IReadOnlyCollection<SocketGuildUser> connectedVoiceUsers, EmbedBuilder embedBuilder, SpinMode spinMode)
+    protected async Task<List<SocketGuildUser>?> Spin (SocketSlashCommand command,
+                                                       IReadOnlyCollection<SocketGuildUser> connectedVoiceUsers,
+                                                       EmbedBuilder embedBuilder, SpinMode spinMode, bool instant)
     {
-        List<string> chosenPlayers  = new List<string>();
-        List<string> players        = connectedVoiceUsers.Select(cu => cu.DisplayName).ToList();
-        int          playersInVoice = connectedVoiceUsers.Count;
-        Random       rng            = new Random();
-        int          max            = rng.Next(10, 20);
+        List<string>  players        = connectedVoiceUsers.Select(cu => cu.DisplayName).ToList();
+        int           playersInVoice = connectedVoiceUsers.Count;
+        Random        rng            = new Random();
+        StringBuilder sb             = new StringBuilder();
 
 
         if (playersInVoice < 3)
         {
-            await command.RespondAsync("Too few players in voice channel to spin!", ephemeral: true);
+            await command.RespondAsync("Too few players to spin.", ephemeral: true);
             return null;
         }
 
-        StringBuilder sb = new StringBuilder();
         await command.DeferAsync();
-        for (int i = 0, y = 0, x = playersInVoice / 2; i < max; i++)
+
+        if (instant)
         {
-            if (y == playersInVoice)
+            int rollX = rng.Next(0, playersInVoice + 1);
+            int rollY = rng.Next(0, playersInVoice + 1);
+            while (rollY == rollX)
             {
-                y = 0;
+                rollY = rng.Next(0, playersInVoice + 1);
             }
 
-            if (x == playersInVoice)
-            {
-                x = 0;
-            }
+            await SendRollsAsync(rollX, rollY, command, sb, embedBuilder, players, spinMode, true);
+            return ChooseWinners(rollX, rollY, playersInVoice, players, connectedVoiceUsers, spinMode);
+        }
 
-
-            foreach (var player in players)
+        if (instant == false)
+        {
+            int  roll          = rng.Next(14, 34);
+            bool lastIteration;
+            for (int i = 0, y = 0, x = playersInVoice / 2; i < roll; i++)
             {
-                if (players[x] == player
-                 || (spinMode == SpinMode.Duo && players[y] == player))
+                await Task.Delay(50);
+                lastIteration = !(i < roll - 1);
+                if (y == playersInVoice)
                 {
-                    sb.AppendLine("-> " + $"**{player}**");
+                    y = 0;
                 }
-                else
+
+                if (x == playersInVoice)
                 {
-                    sb.AppendLine(player);
+                    x = 0;
                 }
-            }
 
+                await SendRollsAsync(x, y, command, sb, embedBuilder, players, spinMode, lastIteration);
 
-            embedBuilder.WithDescription(sb.ToString());
-            await command.ModifyOriginalResponseAsync(mp => mp.Embed = embedBuilder.Build());
-            /*if (rng.Next(0, 20) % 2 == 0)
-            {
-                y++;
-                if (y == x)
+                if (spinMode == SpinMode.Duo
+                 && (i % 2 == 0 || rng.Next(0, 2) == 1))
                 {
                     y++;
                 }
-            }
-            else if (rng.Next(0, 20) % 2 == 0)
-            {
-
-                x++;
-                if (x == y)
+                else
                 {
                     x++;
                 }
-            }*/
 
-            if (spinMode == SpinMode.Duo && i % 2 == 0)
-            {
-                y++;
-            }
-            else
-            {
-                x++;
-            }
-
-            if (spinMode == SpinMode.Duo && x == y)
-            {
-                x++;
-            }
-
-            sb.Clear();
-            if (i == max - 1)
-            {
-
-                if (spinMode == SpinMode.Duo)
+                if (spinMode == SpinMode.Duo
+                 && x == y)
                 {
-                    y = Math.Clamp(y, 0, playersInVoice - 1);
-                    chosenPlayers.Add(players[y]);
+                    x++;
                 }
 
-                x = Math.Clamp(x, 0, playersInVoice - 1);
-                chosenPlayers.Add(players[x]);
+                if (y == playersInVoice)
+                {
+                    y = 0;
+                }
 
-                List<SocketGuildUser> spinWinners = connectedVoiceUsers.Where(cu => chosenPlayers.Contains(cu.DisplayName))
-                                     .ToList();
-                return spinWinners;
+                if (x == playersInVoice)
+                {
+                    x = 0;
+                }
+
+
+                if (lastIteration)
+                {
+                    return ChooseWinners(x, y, playersInVoice, players, connectedVoiceUsers, spinMode);
+                }
+
+                sb.Clear();
+
+                Console.WriteLine($"iteration {i} / {roll} ");
             }
         }
 
+
         return null;
+    }
+
+    private async Task SendRollsAsync (int x, int y, SocketSlashCommand command, StringBuilder sb, EmbedBuilder eb,
+                                       List<string> players, SpinMode spinMode, bool finished)
+    {
+        foreach (var player in players)
+        {
+            if (players[x] == player
+             || (spinMode == SpinMode.Duo && players[y] == player))
+            {
+                if (finished)
+                {
+                    sb.AppendLine("-> " + $"**{player}**" + " <-");
+                }
+                else
+                {
+                    sb.AppendLine("-> " + $"{player}" + " <-");
+                }
+            }
+            else
+            {
+                sb.AppendLine(player);
+            }
+        }
+
+        eb.WithDescription(sb.ToString());
+        await command.ModifyOriginalResponseAsync(mp => mp.Embed = eb.Build());
+    }
+
+    private List<SocketGuildUser> ChooseWinners (int x, int y, int maxPlayersInVoice, List<string> players, IReadOnlyCollection<SocketGuildUser> connectedVoiceUsers, SpinMode spinMode)
+    {
+        List<string> chosenPlayers = new List<string>();
+        if (spinMode == SpinMode.Duo)
+        {
+            y = Math.Clamp(y, 0, maxPlayersInVoice - 1);
+            chosenPlayers.Add(players[y]);
+        }
+
+        x = Math.Clamp(x, 0, maxPlayersInVoice - 1);
+        chosenPlayers.Add(players[x]);
+
+        List<SocketGuildUser> spinWinners = connectedVoiceUsers
+                                            .Where(cu => chosenPlayers.Contains(cu.DisplayName))
+                                            .ToList();
+        return spinWinners;
+
     }
 }

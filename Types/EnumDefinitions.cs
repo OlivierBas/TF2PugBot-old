@@ -3,13 +3,21 @@
 public enum CommandNames
 {
     NotFound,
-    Testing,
     CaptainSpin,
-    MedicSpin
+    MedicSpin,
+    SetTeamChannel,
+    SetAdminRole,
+    ModifyMedicImmunity
 }
 
 public enum SpinMode
 {
     Solo,
     Duo
+}
+
+public enum Team
+{
+    RED,
+    BLU
 }

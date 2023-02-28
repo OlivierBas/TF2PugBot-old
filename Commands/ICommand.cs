@@ -9,5 +9,5 @@ public interface ICommand
     /// </summary>
     /// <param name="command">The Command to be performed</param>
     /// <param name="caller">The User that called the command</param>
-    public Task Perform (SocketSlashCommand command, SocketGuildUser caller);
+    public Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller);
 }

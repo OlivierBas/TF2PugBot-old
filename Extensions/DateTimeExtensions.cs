@@ -4,6 +4,10 @@ public static class DateTimeExtensions
 {
     public static int HoursFromNow (this DateTime dt)
     {
-        return (dt - DateTime.Now).Hours;
+        return (DateTime.Now - dt).Hours;
+    }
+    public static int MinutesFromNow (this DateTime dt)
+    {
+        return (DateTime.Now - dt).Minutes;
     }
 }
