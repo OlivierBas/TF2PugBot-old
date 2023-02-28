@@ -18,19 +18,29 @@ public class Program
         Console.Clear();
         if (String.IsNullOrEmpty(EasySetup.Token))
         {
-            DataManager.Token = args[0];
-            if (ulong.TryParse(args[1], out ulong guildId))
+            try
             {
-                _devGuildId = guildId;
+                DataManager.Token = args[0];
+                if (ulong.TryParse(args[1], out ulong guildId))
+                {
+                    _devGuildId = guildId;
+                }
+
+                if (ulong.TryParse(args[2], out ulong devId))
+                {
+                    DataManager.DevId = devId;
+                }
+
+                if (bool.TryParse(args[3], out bool instantSpin))
+                {
+                    DataManager.InstantSpin = instantSpin;
+                }
             }
-            if (ulong.TryParse(args[2], out ulong devId))
+            catch (IndexOutOfRangeException ex)
             {
-                DataManager.DevId = devId;
+                Console.WriteLine("Not enough arguments were passed, order is: Token  Guild Id  Dev Id  Instant Spin ");
             }
-            if (bool.TryParse(args[3], out bool instantSpin))
-            {
-                DataManager.InstantSpin = instantSpin;
-            }
+
         }
         else
         {
