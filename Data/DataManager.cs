@@ -4,15 +4,14 @@ using Discord.WebSocket;
 using TF2PugBot.Extensions;
 using TF2PugBot.Types;
 
-namespace TF2PugBot.Helpers;
+namespace TF2PugBot.Data;
 
 public static class DataManager
 {
     private static string _token = string.Empty;
-    private const string MEDIMMUNITIES_DB = "medimmunities.json";
-    private const string GUILDTEAMCHANNELS_DB = "guildteamchannels.json";
-    private const ulong DEV_ID = 624280077982629888;
-    
+    private static bool _instantSpin;
+    private static ulong _devId;
+
     private static List<MedicImmunePlayer> _medImmunities = new List<MedicImmunePlayer> ();
     private static Dictionary<ulong, MedicImmunePlayer[]> _temporaryMedicImmunities = new Dictionary<ulong, MedicImmunePlayer[]>();
 
@@ -29,6 +28,29 @@ public static class DataManager
             }
         }
     }
+
+    public static bool InstantSpin
+    {
+        get => _instantSpin;
+        set => _instantSpin = value;
+    } 
+    
+    public static ulong DevId
+    {
+        get => _devId;
+        set => _devId = value;
+    }
+
+    private static string MedImmunityDb
+    {
+        get => EasySetup.MedDbFileName + ".json";
+    }
+    
+    private static string GuildDataDb
+    {
+        get => EasySetup.GuildDbFileName + ".json";
+    }
+
     
     public static IReadOnlyCollection<MedicImmunePlayer> TrackedMedImmunities => _medImmunities.AsReadOnly();
     
@@ -47,7 +69,7 @@ public static class DataManager
                 return true;
             }
 
-            if (caller.Roles.Any(r => r.Permissions.Administrator == true))
+            if (caller.Roles.Any(r => r.Permissions.Administrator))
             {
                 return true;
             }
@@ -57,7 +79,7 @@ public static class DataManager
                 return true;
             }
 
-            if (caller.Id == DEV_ID)
+            if (caller.Id == _devId)
             {
                 return true;
             }
@@ -161,13 +183,14 @@ public static class DataManager
         await SaveDbAsync();
     }
 
-    public static void InitializeGuildData (SocketGuild guild)
+    public static async Task InitializeGuildDataAsync (SocketGuild guild)
     {
         if (_guildSettingsData.Any(g => g.GuildId == guild.Id))
         {
             return;
         }
         _guildSettingsData.Add(new GuildSettingsData() {GuildId = guild.Id});
+        await SaveDbAsync();
     }
     
     public static Team? GetGuildTeamChannel (ulong guildId, ulong channelId)
@@ -208,10 +231,10 @@ public static class DataManager
 
     private static async Task RetrieveDbAsync ()
     {
-        string medDb   = MEDIMMUNITIES_DB;
-        string guildDb = GUILDTEAMCHANNELS_DB;
+        string medDb   = MedImmunityDb;
+        string guildDb = GuildDataDb;
         
-        using (FileStream fs = new FileStream(medDb, FileMode.OpenOrCreate, FileAccess.Read))
+        await using (FileStream fs = new FileStream(medDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
             {
@@ -223,7 +246,7 @@ public static class DataManager
             }
         }
         
-        using (FileStream fs = new FileStream(guildDb, FileMode.OpenOrCreate, FileAccess.Read))
+        await using (FileStream fs = new FileStream(guildDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
             {
@@ -238,8 +261,8 @@ public static class DataManager
 
     private static void RetrieveDb ()
     {
-        string medDb   = MEDIMMUNITIES_DB;
-        string guildDb = GUILDTEAMCHANNELS_DB;
+        string medDb   = MedImmunityDb;
+        string guildDb = GuildDataDb;
         
         using (FileStream fs = new FileStream(medDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
@@ -268,20 +291,21 @@ public static class DataManager
 
     private static async Task SaveDbAsync ()
     {
-        string medDb   = MEDIMMUNITIES_DB;
-        string guildDb = GUILDTEAMCHANNELS_DB;
-        using (FileStream fs = new FileStream(medDb, FileMode.Truncate, FileAccess.Write))
+        string medDb   = MedImmunityDb;
+        string guildDb = GuildDataDb;
+        
+        await using (FileStream fs = new FileStream(medDb, FileMode.Truncate, FileAccess.Write))
         {
-            using (StreamWriter sw = new StreamWriter(fs))
+            await using (StreamWriter sw = new StreamWriter(fs))
             {
                 var storedImmunities =_medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
                 await sw.WriteAsync(JsonSerializer.Serialize(storedImmunities));
             }
         }
         
-        using (FileStream fs = new FileStream(guildDb, FileMode.Truncate, FileAccess.Write))
+        await using (FileStream fs = new FileStream(guildDb, FileMode.Truncate, FileAccess.Write))
         {
-            using (StreamWriter sw = new StreamWriter(fs))
+            await using (StreamWriter sw = new StreamWriter(fs))
             {
                 await sw.WriteAsync(JsonSerializer.Serialize(_guildSettingsData));
             }
@@ -290,8 +314,9 @@ public static class DataManager
 
     private static void SaveDb ()
     {
-        string medDb   = MEDIMMUNITIES_DB;
-        string guildDb = GUILDTEAMCHANNELS_DB;
+        string medDb   = MedImmunityDb;
+        string guildDb = GuildDataDb;
+        
         using (FileStream fs = new FileStream(medDb, FileMode.Truncate, FileAccess.Write))
         {
             using (StreamWriter sw = new StreamWriter(fs))
