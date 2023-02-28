@@ -14,7 +14,7 @@ public static class DataManager
     private const ulong DEV_ID = 624280077982629888;
     
     private static List<MedicImmunePlayer> _medImmunities = new List<MedicImmunePlayer> ();
-    private static MedicImmunePlayer[] _temporaryMedicImmunities = new MedicImmunePlayer[2];
+    private static Dictionary<ulong, MedicImmunePlayer[]> _temporaryMedicImmunities = new Dictionary<ulong, MedicImmunePlayer[]>();
 
     private static List<GuildSettingsData> _guildSettingsData = new List<GuildSettingsData>();
 
@@ -88,6 +88,11 @@ public static class DataManager
         return _medImmunities;
     }
 
+    public static IReadOnlyCollection<MedicImmunePlayer> GetTemporaryMedImmunePlayers (ulong? guildId)
+    {
+        return _temporaryMedicImmunities.FirstOrDefault(m => m.Key == guildId).Value.ToList();
+    }
+
     public static void MakePlayerMedImmune (SocketGuildUser player, Team team)
     {
         var medicImmunePlayer = new MedicImmunePlayer()
@@ -101,27 +106,30 @@ public static class DataManager
         switch (team)
         {
             case Team.RED:
-                _temporaryMedicImmunities[(int)team] = medicImmunePlayer;
+                _temporaryMedicImmunities[player.Guild.Id][(int)team] = medicImmunePlayer;
                 break;
             case Team.BLU:
-                _temporaryMedicImmunities[(int)team] = medicImmunePlayer;
+                _temporaryMedicImmunities[player.Guild.Id][(int)team] = medicImmunePlayer;
                 break;
         }
         
     }
 
-    public static async Task MakePermanentImmunitiesAsync ()
+    public static async Task MakePermanentImmunitiesAsync (ulong guildId)
     {
-        foreach (var medicImmunePlayer in _medImmunities)
+        foreach (var medicImmunePlayer in _temporaryMedicImmunities[guildId])
         {
-            if (_medImmunities.Contains(medicImmunePlayer))
+            if (medicImmunePlayer.Added.MinutesFromNow() > 4)
             {
-                _medImmunities.FirstOrDefault(p => p.Id == medicImmunePlayer.Id && p.GuildId == medicImmunePlayer.GuildId)!.Added = DateTime.Now;
-                continue;
+                if (_medImmunities.Contains(medicImmunePlayer))
+                {
+                    _medImmunities.FirstOrDefault(p => p.Id == medicImmunePlayer.Id && p.GuildId == medicImmunePlayer.GuildId)!.Added = DateTime.Now;
+                    continue;
+                }
+                _medImmunities.Add(medicImmunePlayer);
             }
-            _medImmunities.Add(medicImmunePlayer);
         }
-
+        _temporaryMedicImmunities[guildId] = new MedicImmunePlayer[2];
         await SaveDbAsync();
     }
 
@@ -138,6 +146,18 @@ public static class DataManager
     public static async Task ClearListOfImmunePlayersAsync (List<SocketGuildUser> playersToBeRemoved)
     {
         _medImmunities.RemoveAll(m => playersToBeRemoved.Select(p => (MedicImmunePlayer)p).Contains(m));
+        await SaveDbAsync();
+    }
+
+    public static async Task ForceAddMedImmunePlayerAsync (SocketGuildUser player)
+    {
+        _medImmunities.Add(player);
+        await SaveDbAsync();
+    }
+
+    public static async Task ForceRemoveMedImmunePlayerAsync (SocketGuildUser player)
+    {
+        _medImmunities.RemoveAll(m => m.GuildId == player.Guild.Id && m.Id == player.Id);
         await SaveDbAsync();
     }
 
