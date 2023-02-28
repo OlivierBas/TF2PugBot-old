@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
 using TF2PugBot.Extensions;
 using TF2PugBot.Helpers;
@@ -38,7 +37,7 @@ public class SpinMediCommand : BaseSpinCommand, ICommand
                     medSpinners = connectedUsers.ToList();
                 }
             
-                List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo);
+                List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo, true);
 
                 if (winners is not null)
                 {
