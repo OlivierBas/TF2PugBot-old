@@ -41,7 +41,7 @@ public abstract class BaseSpinCommand
         if (instant == false)
         {
             int  roll          = rng.Next(14, 34);
-            bool lastIteration = false;
+            bool lastIteration;
             for (int i = 0, y = 0, x = playersInVoice / 2; i < roll; i++)
             {
                 await Task.Delay(50);
@@ -127,7 +127,7 @@ public abstract class BaseSpinCommand
         await command.ModifyOriginalResponseAsync(mp => mp.Embed = eb.Build());
     }
 
-    private List<SocketGuildUser?> ChooseWinners (int x, int y, int maxPlayersInVoice, List<string> players, IReadOnlyCollection<SocketGuildUser> connectedVoiceUsers, SpinMode spinMode)
+    private List<SocketGuildUser> ChooseWinners (int x, int y, int maxPlayersInVoice, List<string> players, IReadOnlyCollection<SocketGuildUser> connectedVoiceUsers, SpinMode spinMode)
     {
         List<string> chosenPlayers = new List<string>();
         if (spinMode == SpinMode.Duo)

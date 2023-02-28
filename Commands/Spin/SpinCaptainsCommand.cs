@@ -1,8 +1,8 @@
 ﻿using System.Text;
 using Discord;
 using Discord.WebSocket;
+using TF2PugBot.Data;
 using TF2PugBot.Extensions;
-using TF2PugBot.Helpers;
 using TF2PugBot.Types;
 
 namespace TF2PugBot.Commands.Spin;
@@ -36,7 +36,7 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
                 await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
             }
             
-            List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder, SpinMode.Duo, true);
+            List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder, SpinMode.Duo, DataManager.InstantSpin);
             if(winners is not null)
             {
                  await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");

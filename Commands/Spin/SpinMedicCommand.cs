@@ -1,12 +1,12 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using TF2PugBot.Data;
 using TF2PugBot.Extensions;
-using TF2PugBot.Helpers;
 using TF2PugBot.Types;
 
 namespace TF2PugBot.Commands.Spin;
 
-public class SpinMediCommand : BaseSpinCommand, ICommand
+public class SpinMedicCommand : BaseSpinCommand, ICommand
 {
     /// <inheritdoc />
     public async Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller)
@@ -37,7 +37,7 @@ public class SpinMediCommand : BaseSpinCommand, ICommand
                     medSpinners = connectedUsers.ToList();
                 }
             
-                List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo, true);
+                List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo, DataManager.InstantSpin);
 
                 if (winners is not null)
                 {

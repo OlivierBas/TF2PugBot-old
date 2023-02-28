@@ -1,7 +1,6 @@
-﻿using Discord;
-using Discord.WebSocket;
-using TF2PugBot.Helpers;
-using TF2PugBot.Types;
+﻿using Discord.WebSocket;
+using TF2PugBot.Data;
+
 
 namespace TF2PugBot.Commands.Management;
 
