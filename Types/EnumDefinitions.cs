@@ -23,3 +23,10 @@ public enum Team
     RED,
     BLU
 }
+
+public enum StatTypes
+{
+    GamesPlayed,
+    CaptainSpinsWon,
+    MedicSpinsWon,
+}

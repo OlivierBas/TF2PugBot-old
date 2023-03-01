@@ -15,31 +15,52 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
 
         if (caller.IsConnectedToVoice())
         {
-            var embedBuilder = new EmbedBuilder();
+            EmbedBuilder embedBuilder = new EmbedBuilder();
             embedBuilder.WithTitle("Spinning for Team Captain!");
             embedBuilder.WithColor(Color.Teal);
-            var newImmunities = DataManager.GetTemporaryMedImmunePlayers(command.GuildId);
 
-            if (newImmunities is not null && newImmunities.Count > 0)
+            if (DataManager.PreviousGuildGameEnded(command.GuildId.GetValueOrDefault()))
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (MedicImmunePlayer player in newImmunities)
+                IReadOnlyCollection<MedicImmunePlayer> newImmunities = DataManager.GetTemporaryMedImmunePlayers(command.GuildId);
+
+                if (newImmunities.Count > 0)
                 {
-                    if (player.Added.MinutesFromNow() > 4)
+                    StringBuilder sb = new StringBuilder();
+                    foreach (MedicImmunePlayer player in newImmunities)
                     {
-                        sb.AppendLine($"{player.DisplayName} will be granted med immunity for next medic spin");
+                        if (player.Added.MinutesFromNow() > 4)
+                        {
+                            sb.AppendLine($"{player.DisplayName} will be granted med immunity for next medic spin");
+                        }
                     }
+
+                    embedBuilder.WithFooter(sb.ToString());
+
+                    await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
                 }
 
-                embedBuilder.WithFooter(sb.ToString());
-
-                await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
+                foreach (var user in caller.VoiceChannel.ConnectedUsers)
+                {
+                    await DataManager.UpdatePlayerStatsAsync(user.Id, command.GuildId.GetValueOrDefault(),
+                                                       StatTypes.GamesPlayed);
+                }
             }
+            
             
             List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder, SpinMode.Duo, DataManager.InstantSpin);
             if(winners is not null)
             {
-                 await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
+                DataManager.StartGuildGame(command.GuildId.GetValueOrDefault());
+                await DataManager.UpdatePlayerStatsAsync(winners[0].Id, command.GuildId.GetValueOrDefault(), StatTypes.CaptainSpinsWon);
+                await DataManager.UpdatePlayerStatsAsync(winners[1].Id, command.GuildId.GetValueOrDefault(), StatTypes.CaptainSpinsWon);
+                if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
+                {
+                    await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
+                }
+                else
+                {
+                    await command.FollowupAsync($"{winners[0].DisplayName} and {winners[1].DisplayName} are team captains!");
+                }
                 // await command.FollowupAsync($"winner");
             }
 
