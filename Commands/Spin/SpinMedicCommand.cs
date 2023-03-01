@@ -36,6 +36,8 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
                     await DataManager.ClearListOfImmunePlayersAsync(medSpinners);
                     medSpinners = connectedUsers.ToList();
                 }
+
+                DataManager.AddPlayersToGuildGame(command.GuildId.GetValueOrDefault(), connectedUsers.Select(cu => cu.Id).ToArray());
             
                 List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo, DataManager.InstantSpin);
 

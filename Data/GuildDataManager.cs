@@ -7,7 +7,7 @@ namespace TF2PugBot.Data;
 public static partial class DataManager
 {
     private static List<GuildSettingsData> _guildSettingsData = new List<GuildSettingsData>();
-    private static Dictionary<ulong, DateTime> _lastGuildGame = new Dictionary<ulong, DateTime>();
+    private static Dictionary<ulong, GuildGameData> _lastGuildGame = new Dictionary<ulong, GuildGameData>();
     public static async Task InitializeGuildDataAsync (SocketGuild guild)
     {
         if (_guildSettingsData.Any(g => g.GuildId == guild.Id))
@@ -22,19 +22,38 @@ public static partial class DataManager
     {
         if (!_lastGuildGame.ContainsKey(guildId))
         {
-            _lastGuildGame.Add(guildId, DateTime.Now);
+            _lastGuildGame.Add(guildId, new GuildGameData());
         }
     }
 
-    public static bool PreviousGuildGameEnded (ulong guildId)
+    public static async Task<bool> PreviousGuildGameEndedAsync (ulong guildId)
     {
-        if (_lastGuildGame[guildId].MinutesFromNow() > 5)
+        if (_lastGuildGame[guildId].StartDate.MinutesFromNow() > 5)
         {
+            foreach (var player in _lastGuildGame[guildId].Players)
+            {
+                await UpdatePlayerStatsAsync(player, guildId, StatTypes.GamesPlayed);
+            }
             _lastGuildGame.Remove(guildId);
             return true;
         }
 
         return false;
+    }
+
+    public static void AddPlayersToGuildGame (ulong guildId, params ulong[] userIds)
+    {
+        if (_lastGuildGame.ContainsKey(guildId))
+        {
+            foreach (var userId in userIds)
+            {
+                if (_lastGuildGame[guildId].Players.Contains(userId))
+                {
+                    continue;
+                }
+                _lastGuildGame[guildId].Players.Add(userId);
+            }
+        }
     }
     
     public static Team? GetGuildTeamChannel (ulong guildId, ulong channelId)

@@ -19,7 +19,7 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             embedBuilder.WithTitle("Spinning for Team Captain!");
             embedBuilder.WithColor(Color.Teal);
 
-            if (DataManager.PreviousGuildGameEnded(command.GuildId.GetValueOrDefault()))
+            if (await DataManager.PreviousGuildGameEndedAsync(command.GuildId.GetValueOrDefault()))
             {
                 IReadOnlyCollection<MedicImmunePlayer> newImmunities = DataManager.GetTemporaryMedImmunePlayers(command.GuildId);
 
@@ -38,12 +38,7 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
 
                     await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
                 }
-
-                foreach (var user in caller.VoiceChannel.ConnectedUsers)
-                {
-                    await DataManager.UpdatePlayerStatsAsync(user.Id, command.GuildId.GetValueOrDefault(),
-                                                       StatTypes.GamesPlayed);
-                }
+                
             }
             
             
