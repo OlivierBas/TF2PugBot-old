@@ -16,7 +16,7 @@ public class ConfigureAdminRoleCommand : ICommand
             try
             {
                 SocketRole role    = (SocketRole )argRole;
-                await DataManager.SetAdminRole(command.GuildId.GetValueOrDefault(), role);
+                await DataManager.SetGuildAdminRoleAsync(command.GuildId.GetValueOrDefault(), role);
                 
                 await command.RespondAsync($"Successfully set `{role.Name}` to the bot management role.", ephemeral: true);
                 return;
