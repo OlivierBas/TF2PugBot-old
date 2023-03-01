@@ -74,7 +74,6 @@ public static partial class DataManager
 
     public static async Task UpdatePlayerStatsAsync (ulong userId, ulong guildId, StatTypes stat)
     {
-        TryGeneratePlayerStats(userId, guildId);
         var ps = GetPlayerGuildStats(userId, guildId);
         if (ps is not null)
         {
