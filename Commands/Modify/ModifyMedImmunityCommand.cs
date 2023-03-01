@@ -33,14 +33,29 @@ public class ModifyMedImmunityCommand : ICommand
                 if (option == "grant")
                 {
                     await DataManager.ForceAddMedImmunePlayerAsync(user);
-                    await command.RespondAsync($"<@!{user.Id}> has been granted medic immunity for 12 hours");
+                    if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
+                    {
+                        await command.RespondAsync($"<@!{user.Id}> has been granted medic immunity for 12 hours");
+                    }
+                    else
+                    {
+                        await command.RespondAsync($"{user.DisplayName} has been granted medic immunity for 12 hours");
+                    }
                     return;
                 }
 
                 if (option == "revoke")
                 {
                     await DataManager.ForceRemoveMedImmunePlayerAsync(user);
-                    await command.RespondAsync($"<@!{user.Id} has been revoked medic immunity");
+                    if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
+                    {
+                        await command.RespondAsync($"<@!{user.Id}> has been revoked medic immunity");
+                    }
+                    else
+                    {
+                        await command.RespondAsync($"{user.DisplayName} has been revoked medic immunity");
+                    }
+
                     return;
                 }
 

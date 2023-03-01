@@ -6,6 +6,7 @@ public static class EasySetup
 {
     public const string MedDbFileName = "medimmunities";
     public const string GuildDbFileName = "guilddata";
+    public const string StatsDbFileName = "playerstats";
     
     /// <summary>
     /// !IMPORTANT!

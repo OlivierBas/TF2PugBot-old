@@ -7,7 +7,9 @@ public enum CommandNames
     MedicSpin,
     SetTeamChannel,
     SetAdminRole,
-    ModifyMedicImmunity
+    SetPings,
+    ModifyMedicImmunity,
+    GetStats,
 }
 
 public enum SpinMode
@@ -20,4 +22,11 @@ public enum Team
 {
     RED,
     BLU
+}
+
+public enum StatTypes
+{
+    GamesPlayed,
+    CaptainSpinsWon,
+    MedicSpinsWon,
 }

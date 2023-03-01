@@ -36,13 +36,23 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
                     await DataManager.ClearListOfImmunePlayersAsync(medSpinners);
                     medSpinners = connectedUsers.ToList();
                 }
+
+                DataManager.AddPlayersToGuildGame(command.GuildId.GetValueOrDefault(), connectedUsers.Select(cu => cu.Id).ToArray());
             
                 List<SocketGuildUser>? winners = await Spin(command, medSpinners, embedBuilder, SpinMode.Solo, DataManager.InstantSpin);
 
                 if (winners is not null)
                 {
                     DataManager.MakePlayerMedImmune(winners[0], vcTeam.GetValueOrDefault());
-                    await command.FollowupAsync($"<@!{winners[0].Id}> is {vcTeam.ToString()} medic and will be granted med immunity after game end, unless re-spun!");  
+                    await DataManager.UpdatePlayerStatsAsync(winners[0].Id, command.GuildId.GetValueOrDefault(), StatTypes.CaptainSpinsWon);
+                    if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
+                    {
+                        await command.FollowupAsync($"<@!{winners[0].Id}> is {vcTeam.ToString()} medic and will be granted med immunity after game end, unless re-spun!");  
+                    }
+                    else
+                    {
+                        await command.FollowupAsync($"{winners[0].DisplayName} is {vcTeam.ToString()} medic and will be granted med immunity after game end, unless re-spun!");  
+                    }
                     //await command.FollowupAsync($"winner!");  
                 }
 

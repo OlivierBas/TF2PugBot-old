@@ -24,12 +24,12 @@ public class ConfigureTeamChannelCommand : ICommand
             
                 if (bluOrRed == "blu")
                 {
-                    success = await DataManager.UpdateGuildChannelData(command.GuildId.GetValueOrDefault(), Team.BLU, channel.Id);
+                    success = await DataManager.UpdateGuildChannelDataAsync(command.GuildId.GetValueOrDefault(), Team.BLU, channel.Id);
 
                 }
                 else if (bluOrRed == "red")
                 {
-                    success = await DataManager.UpdateGuildChannelData(command.GuildId.GetValueOrDefault(), Team.RED, channel.Id);
+                    success = await DataManager.UpdateGuildChannelDataAsync(command.GuildId.GetValueOrDefault(), Team.RED, channel.Id);
                 
                 }
             

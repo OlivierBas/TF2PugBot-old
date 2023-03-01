@@ -9,6 +9,7 @@ public class GuildSettingsData
     private ulong? _redTeamVoiceChannelId;
     private ulong? _bluTeamVoiceChannelId;
     private ulong? _adminRoleId;
+    private bool _pingOnSpin = true;
     
     public ulong GuildId { get; set; } = default;
 
@@ -30,6 +31,12 @@ public class GuildSettingsData
     {
         get => _adminRoleId;
         set => _adminRoleId = value;
+    }
+
+    public bool PingOnSpin
+    {
+        get => _pingOnSpin;
+        set => _pingOnSpin = value;
     }
 
     public bool TryUpdateValue (Team team, ulong channelId)
