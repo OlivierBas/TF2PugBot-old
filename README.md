@@ -39,7 +39,7 @@ The bot now tracks games played for each player within every server as well as w
 
 ### Release (No Compilation)
 
-The bot can be ran with the files found in Release, a bat or shell script file might be required to run the bot with necessary launch arguements.
+The bot can be ran with the pre-compiled files found under [Releases](https://github.com/OlivierDotNet/TF2PugBot/releases), a bat or shell script file might be required to run the bot with necessary launch arguements. However these arguements can also be provided with shortcut launch arguements on Windows.
 
 * Make a file called `run.sh` (Linx) / `run.bat` (Windows)
 * Edit the file to execute the file with the following arguements:
