@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using TF2PugBot.Commands.Management;
 using TF2PugBot.Commands.Modify;
 using TF2PugBot.Commands.Spin;
+using TF2PugBot.Commands.Stats;
 using TF2PugBot.Data;
 using TF2PugBot.Helpers;
 using TF2PugBot.Types;
@@ -13,8 +14,9 @@ public class Program
 {
     private DiscordSocketClient? _client;
     private static ulong? _devGuildId;
+
     public static Task Main (string[] args)
-    {        
+    {
         Console.Clear();
         if (String.IsNullOrEmpty(EasySetup.Token))
         {
@@ -40,7 +42,6 @@ public class Program
             {
                 Console.WriteLine("Not enough arguments were passed, order is: Token  Guild Id  Dev Id  Instant Spin ");
             }
-
         }
         else
         {
@@ -49,7 +50,7 @@ public class Program
             DataManager.DevId       = EasySetup.OwnerId;
             _devGuildId             = EasySetup.DiscordServerId;
         }
-        
+
         return new Program().MainAsync();
     }
 
@@ -75,52 +76,72 @@ public class Program
         {
             throw new Exception("Dev Guild Id is not set, use Args[1] or EasySetup.cs");
         }
+
         var devGuild = _client!.GetGuild(_devGuildId.GetValueOrDefault());
 
 
-        var captainSpinCommand = new SlashCommandBuilder();
-        captainSpinCommand.WithName("spinforcaptain");
-        captainSpinCommand.WithDescription("Spin for Captain (Be in Voice Channel)");
-        
-        var medicSpinCommand = new SlashCommandBuilder();
-        medicSpinCommand.WithName("spinformedic");
-        medicSpinCommand.WithDescription("Spin for Medic (Be in Voice Channel)");
+        var captainSpinCommand = new SlashCommandBuilder()
+                                 .WithName("spinforcaptain")
+                                 .WithDescription("Spin for Captain (Be in Voice Channel)");
+
+        var medicSpinCommand = new SlashCommandBuilder()
+                               .WithName("spinformedic")
+                               .WithDescription("Spin for Medic (Be in Voice Channel)");
+
+        var getStatsCommand = new SlashCommandBuilder()
+                              .WithName("stats")
+                              .WithDescription("Get stats of user")
+                              .AddOption("user", ApplicationCommandOptionType.User, "The user to check stats for",
+                                         isRequired: false);
+
+        var setPingUsersCommand = new SlashCommandBuilder()
+                                  .WithName("configure-pings")
+                                  .WithDescription("Enable or disable user mentions after a won spin")
+                                  .AddOption("value", ApplicationCommandOptionType.Boolean,
+                                             "Whether to ping users when they have won a roll");
 
 
-        var setTeamChannelCommand = new SlashCommandBuilder();
-        setTeamChannelCommand.WithName("configure-channels");
-        setTeamChannelCommand.WithDescription("Set Team channel for Medic Spin");
-        setTeamChannelCommand.AddOption(new SlashCommandOptionBuilder()
-                                        .WithName("team")
-                                        .WithDescription("Sets the specified team's channel")
-                                        .WithType(ApplicationCommandOptionType.SubCommandGroup)
-                                        .AddOption(new SlashCommandOptionBuilder()
-                                                   .WithName("blu")
-                                                   .WithDescription("Set BLU Team's channel")
-                                                   .WithType(ApplicationCommandOptionType.SubCommand)
-                                                   .AddOption("channel", ApplicationCommandOptionType.Channel, "The voice channel to be used for the BLU team", isRequired: true))
-                                        .AddOption(new SlashCommandOptionBuilder()
-                                                   .WithName("red")
-                                                   .WithDescription("Set RED Team's channel")
-                                                   .WithType(ApplicationCommandOptionType.SubCommand)
-                                                   .AddOption("channel", ApplicationCommandOptionType.Channel, "The voice channel to be used for the RED team", isRequired: true))
-                                        );
-        
-        var setManagementRoleCommand = new SlashCommandBuilder();
-        setManagementRoleCommand.WithName("configure-admins");
-        setManagementRoleCommand.WithDescription("Set Admin Role for bot management");
-        setManagementRoleCommand.AddOption("role", ApplicationCommandOptionType.Role, "The role that is able to configure this bot and grant or revoke immunities", isRequired: true);
+        var setTeamChannelCommand = new SlashCommandBuilder()
+                                    .WithName("configure-channels")
+                                    .WithDescription("Set Team channel for Medic Spin")
+                                    .AddOption(new SlashCommandOptionBuilder()
+                                               .WithName("team")
+                                               .WithDescription("Sets the specified team's channel")
+                                               .WithType(ApplicationCommandOptionType.SubCommandGroup)
+                                               .AddOption(new SlashCommandOptionBuilder()
+                                                          .WithName("blu")
+                                                          .WithDescription("Set BLU Team's channel")
+                                                          .WithType(ApplicationCommandOptionType.SubCommand)
+                                                          .AddOption("channel", ApplicationCommandOptionType.Channel,
+                                                                     "The voice channel to be used for the BLU team",
+                                                                     isRequired: true))
+                                               .AddOption(new SlashCommandOptionBuilder()
+                                                          .WithName("red")
+                                                          .WithDescription("Set RED Team's channel")
+                                                          .WithType(ApplicationCommandOptionType.SubCommand)
+                                                          .AddOption("channel", ApplicationCommandOptionType.Channel,
+                                                                     "The voice channel to be used for the RED team",
+                                                                     isRequired: true))
+                                    );
+
+        var setManagementRoleCommand = new SlashCommandBuilder()
+                                       .WithName("configure-admins")
+                                       .WithDescription("Set Admin Role for bot management")
+                                       .AddOption("role", ApplicationCommandOptionType.Role,
+                                                  "The role that is able to configure this bot and grant or revoke immunities",
+                                                  isRequired: true);
 
 
-        var modifyImmunityCommand = new SlashCommandBuilder();
-        modifyImmunityCommand.WithName("immunity");
-        modifyImmunityCommand.WithDescription("Grant or Revoke medic immunities"); 
-        modifyImmunityCommand.AddOption(new SlashCommandOptionBuilder()
-                                         .WithName("grant")
-                                         .WithDescription("Grant medic immunity")
-                                         .WithType(ApplicationCommandOptionType.SubCommand)
-                                         .AddOption("user", ApplicationCommandOptionType.User,
-                                                    "The user to be given med immunity for 12 hours.", isRequired: true));
+        var modifyImmunityCommand = new SlashCommandBuilder()
+                                    .WithName("immunity")
+                                    .WithDescription("Grant or Revoke medic immunities")
+                                    .AddOption(new SlashCommandOptionBuilder()
+                                               .WithName("grant")
+                                               .WithDescription("Grant medic immunity")
+                                               .WithType(ApplicationCommandOptionType.SubCommand)
+                                               .AddOption("user", ApplicationCommandOptionType.User,
+                                                          "The user to be given med immunity for 12 hours.",
+                                                          isRequired: true));
         modifyImmunityCommand.AddOption(new SlashCommandOptionBuilder()
                                         .WithName("revoke")
                                         .WithDescription("Revoke medic immunity")
@@ -128,22 +149,29 @@ public class Program
                                         .AddOption("user", ApplicationCommandOptionType.User,
                                                    "The user to revoke medic immunity from", isRequired: true));
 
-        modifyImmunityCommand.AddOption("get", ApplicationCommandOptionType.SubCommand, "Check all the medic immune players");
+        modifyImmunityCommand.AddOption("get", ApplicationCommandOptionType.SubCommand,
+                                        "Check all the medic immune players");
 
         try
         {
             await CommandCreator.CreateCommandAsync(devGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
             await CommandCreator.CreateCommandAsync(devGuild, medicSpinCommand.Build(), CommandNames.MedicSpin);
-            await CommandCreator.CreateCommandAsync(devGuild, setTeamChannelCommand.Build(), CommandNames.SetTeamChannel);
-            await CommandCreator.CreateCommandAsync(devGuild, setManagementRoleCommand.Build(), CommandNames.SetAdminRole);
-            await CommandCreator.CreateCommandAsync(devGuild, modifyImmunityCommand.Build(), CommandNames.ModifyMedicImmunity);
+            await CommandCreator.CreateCommandAsync(devGuild, setTeamChannelCommand.Build(),
+                                                    CommandNames.SetTeamChannel);
+            await CommandCreator.CreateCommandAsync(devGuild, setManagementRoleCommand.Build(),
+                                                    CommandNames.SetAdminRole);
+            await CommandCreator.CreateCommandAsync(devGuild, modifyImmunityCommand.Build(),
+                                                    CommandNames.ModifyMedicImmunity);
+            await CommandCreator.CreateCommandAsync(devGuild, getStatsCommand.Build(), CommandNames.GetStats);
+            await CommandCreator.CreateCommandAsync(devGuild, setPingUsersCommand.Build(), CommandNames.SetPings);
 
-            await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
+            /*await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(medicSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(setTeamChannelCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(setManagementRoleCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(modifyImmunityCommand.Build());
-
+            await _client.CreateGlobalApplicationCommandAsync(getStatsCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(setPingUsersCommand.Build());*/
         }
         catch (Exception ex)
         {
@@ -160,6 +188,12 @@ public class Program
 
     private async Task Client_CommandHandler (SocketSlashCommand command)
     {
+        if (command.GuildId is null)
+        {
+            await command.RespondAsync("Commands are only to be used in guilds", ephemeral: true);
+            return;
+        }
+
         SocketGuildUser caller = _client!.GetGuild(command.GuildId.GetValueOrDefault()).GetUser(command.User.Id);
         try
         {
@@ -185,18 +219,22 @@ public class Program
                 case CommandNames.ModifyMedicImmunity:
                     await new ModifyMedImmunityCommand().PerformAsync(command, caller);
                     break;
+                case CommandNames.SetPings:
+                    await new ConfigurePingsCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.GetStats:
+                    await new GetStatsCommand().PerformAsync(command, caller);
+                    break;
             }
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
-
     }
 
     private async Task Client_JoinedGuild (SocketGuild guild)
     {
         await DataManager.InitializeGuildDataAsync(guild);
     }
-    
 }

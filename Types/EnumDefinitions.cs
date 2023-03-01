@@ -7,7 +7,9 @@ public enum CommandNames
     MedicSpin,
     SetTeamChannel,
     SetAdminRole,
-    ModifyMedicImmunity
+    SetPings,
+    ModifyMedicImmunity,
+    GetStats,
 }
 
 public enum SpinMode
