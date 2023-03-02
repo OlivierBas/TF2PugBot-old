@@ -5,7 +5,7 @@ It does not have a pick system ~~nor track amount of games played~~ but tracks a
 
 This bot can be used in multiple servers, but will struggle running multiple pugs/mixes within one server.
 
-Update (Release v1.1)
+Update (Release v0.1)
 The bot now tracks games played for each player within every server as well as won spins. These stats can be seen with `/stats`. 
 
 * [Commands](#commands)
