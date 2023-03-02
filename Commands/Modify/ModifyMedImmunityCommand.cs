@@ -9,23 +9,22 @@ public class ModifyMedImmunityCommand : ICommand
     /// <inheritdoc />
     public async Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller)
     {
-        
         string option = command.Data.Options.First().Name;
 
-        
+
         if (option == "get")
         {
             EmbedBuilder embedBuilder = new EmbedBuilder();
             embedBuilder.WithTitle("Current Medic Immune Players");
-            embedBuilder.WithDescription(DataManager.GetMedImmunePlayerString(command.GuildId));
+            embedBuilder.WithDescription(await DataManager.GetMedImmunePlayerStringAsync(command.GuildId));
 
             await command.RespondAsync(embed: embedBuilder.Build());
             return;
         }
-        
+
         if (DataManager.HasAccessToCommand(command.GuildId, caller))
         {
-            var    argUser       = command.Data.Options.First().Options.First().Value;
+            var argUser = command.Data.Options.First().Options.First().Value;
 
             try
             {
@@ -41,6 +40,7 @@ public class ModifyMedImmunityCommand : ICommand
                     {
                         await command.RespondAsync($"{user.DisplayName} has been granted medic immunity for 12 hours");
                     }
+
                     return;
                 }
 
@@ -60,7 +60,6 @@ public class ModifyMedImmunityCommand : ICommand
                 }
 
 
-
                 await command.RespondAsync("Invalid User");
                 return;
             }
@@ -70,7 +69,7 @@ public class ModifyMedImmunityCommand : ICommand
                 await command.RespondAsync("Something went wrong, make sure to specify the user", ephemeral: true);
             }
         }
+
         await command.RespondAsync("You do not have access to this command", ephemeral: true);
-        
     }
 }
