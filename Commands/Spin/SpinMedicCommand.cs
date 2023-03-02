@@ -18,6 +18,7 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
             if (connectedUsers.Count < 6)
             {
                 await command.RespondAsync("Spin requires 6 players, ignoring.", ephemeral: true);
+                return;
             }
 
             Team? vcTeam = DataManager.GetGuildTeamChannel(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);

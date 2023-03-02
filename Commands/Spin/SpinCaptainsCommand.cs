@@ -16,9 +16,10 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
             int playersInVoice = connectedUsers.Count;
-            if (connectedUsers.Count >= 12)
+            if (connectedUsers.Count < 11)
             {
                 await command.RespondAsync("Spin requires 12 players, ignoring.", ephemeral: true);
+                return;
             }
             
             EmbedBuilder embedBuilder = new EmbedBuilder();
