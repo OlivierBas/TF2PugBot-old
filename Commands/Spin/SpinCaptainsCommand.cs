@@ -16,9 +16,10 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
             int playersInVoice = connectedUsers.Count;
-            if (connectedUsers.Count >= 12)
+            if (connectedUsers.Count < 11)
             {
                 await command.RespondAsync("Spin requires 12 players, ignoring.", ephemeral: true);
+                return;
             }
             
             EmbedBuilder embedBuilder = new EmbedBuilder();
@@ -46,11 +47,7 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
                                                         SpinMode.Duo, DataManager.InstantSpin);
             if (winners is not null)
             {
-                DataManager.StartGuildGame(command.GuildId.GetValueOrDefault());
-                await DataManager.UpdatePlayerStatsAsync(winners[0].Id, command.GuildId.GetValueOrDefault(),
-                                                         StatTypes.CaptainSpinsWon);
-                await DataManager.UpdatePlayerStatsAsync(winners[1].Id, command.GuildId.GetValueOrDefault(),
-                                                         StatTypes.CaptainSpinsWon);
+
                 if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
                 {
                     await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
@@ -60,6 +57,11 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
                     await command.FollowupAsync(
                         $"{winners[0].DisplayName} and {winners[1].DisplayName} are team captains!");
                 }
+                DataManager.StartGuildGame(command.GuildId.GetValueOrDefault());
+                await DataManager.UpdatePlayerStatsAsync(winners[0].Id, command.GuildId.GetValueOrDefault(),
+                                                         StatTypes.CaptainSpinsWon);
+                await DataManager.UpdatePlayerStatsAsync(winners[1].Id, command.GuildId.GetValueOrDefault(),
+                                                         StatTypes.CaptainSpinsWon);
                 // await command.FollowupAsync($"winner");
             }
 

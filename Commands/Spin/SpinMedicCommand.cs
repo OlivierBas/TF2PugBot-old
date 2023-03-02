@@ -18,6 +18,7 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
             if (connectedUsers.Count < 6)
             {
                 await command.RespondAsync("Spin requires 6 players, ignoring.", ephemeral: true);
+                return;
             }
 
             Team? vcTeam = DataManager.GetGuildTeamChannel(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
@@ -47,9 +48,6 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
 
                 if (winners is not null)
                 {
-                    DataManager.PrepareMedImmunity(winners[0], vcTeam.GetValueOrDefault());
-                    await DataManager.UpdatePlayerStatsAsync(winners[0].Id, command.GuildId.GetValueOrDefault(),
-                                                             StatTypes.MedicSpinsWon);
                     if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
                     {
                         await command.FollowupAsync(
@@ -60,6 +58,9 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
                         await command.FollowupAsync(
                             $"{winners[0].DisplayName} is {vcTeam.ToString()} medic and will be granted med immunity after game end, unless re-spun!");
                     }
+                    DataManager.PrepareMedImmunity(winners[0], vcTeam.GetValueOrDefault());
+                    await DataManager.UpdatePlayerStatsAsync(winners[0].Id, command.GuildId.GetValueOrDefault(),
+                                                             StatTypes.MedicSpinsWon);
                     //await command.FollowupAsync($"winner!");  
                 }
 
