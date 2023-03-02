@@ -8,29 +8,32 @@ namespace TF2PugBot.Data;
 
 public static partial class DataManager
 {
-    private static List<MedicImmunePlayer> _medImmunities = new List<MedicImmunePlayer> ();
-    private static Dictionary<ulong, MedicImmunePlayer[]> _temporaryMedicImmunities = new Dictionary<ulong, MedicImmunePlayer[]>();
-    
+    private static List<MedicImmunePlayer> _medImmunities = new List<MedicImmunePlayer>();
+
+    private static Dictionary<ulong, MedicImmunePlayer[]> _temporaryMedicImmunities
+        = new Dictionary<ulong, MedicImmunePlayer[]>();
+
     public static IReadOnlyCollection<MedicImmunePlayer> TrackedMedImmunities => _medImmunities.AsReadOnly();
 
-    public static IReadOnlyCollection<MedicImmunePlayer> GetMedImmunePlayers (ulong? guildId)
+    public static async Task<ICollection<MedicImmunePlayer>> GetMedImmunePlayersAsync (ulong? guildId)
     {
-        List<MedicImmunePlayer> toBeRemoved =_medImmunities.Where(p => p.Added.HoursFromNow() < 0 && p.GuildId == guildId).ToList();
+        List<MedicImmunePlayer> toBeRemoved
+            = _medImmunities.Where(p => p.Added.HoursFromNow() < 0 && p.GuildId == guildId).ToList();
         if (toBeRemoved.Count > 0)
         {
             _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
-
         }
-        SaveDb();
+
+        await SaveDbAsync();
         return _medImmunities;
     }
 
-    public static IReadOnlyCollection<MedicImmunePlayer> GetTemporaryMedImmunePlayers (ulong? guildId)
+    public static ICollection<MedicImmunePlayer> GetTemporaryMedImmunePlayers (ulong? guildId)
     {
         return _temporaryMedicImmunities.FirstOrDefault(m => m.Key == guildId).Value.ToList();
     }
 
-    public static void MakePlayerMedImmune (SocketGuildUser player, Team team)
+    public static void PrepareMedImmunity (SocketGuildUser player, Team team)
     {
         var medicImmunePlayer = new MedicImmunePlayer()
         {
@@ -39,7 +42,12 @@ public static partial class DataManager
             GuildId     = player.Guild.Id,
             Added       = DateTime.Now
         };
-        
+
+        if (!_temporaryMedicImmunities.ContainsKey(player.Guild.Id))
+        {
+            _temporaryMedicImmunities.Add(player.Guild.Id, new MedicImmunePlayer[2]);
+        }
+
         switch (team)
         {
             case Team.RED:
@@ -49,7 +57,6 @@ public static partial class DataManager
                 _temporaryMedicImmunities[player.Guild.Id][(int)team] = medicImmunePlayer;
                 break;
         }
-        
     }
 
     public static async Task MakePermanentImmunitiesAsync (ulong guildId)
@@ -60,27 +67,61 @@ public static partial class DataManager
             {
                 if (_medImmunities.Contains(medicImmunePlayer))
                 {
-                    _medImmunities.FirstOrDefault(p => p.Id == medicImmunePlayer.Id && p.GuildId == medicImmunePlayer.GuildId)!.Added = DateTime.Now;
+                    _medImmunities.FirstOrDefault(p => p.Id == medicImmunePlayer.Id
+                                                    && p.GuildId == medicImmunePlayer.GuildId)!.Added = DateTime.Now;
                     continue;
                 }
+
                 _medImmunities.Add(medicImmunePlayer);
             }
         }
+
         _temporaryMedicImmunities[guildId] = new MedicImmunePlayer[2];
         await SaveDbAsync();
     }
 
-    public static string GetMedImmunePlayerString (ulong? guildId)
+    public static async Task<string> GetMedImmunePlayerStringAsync (ulong? guildId)
     {
         StringBuilder sb = new StringBuilder();
+        List<MedicImmunePlayer> toBeRemoved
+            = _medImmunities.Where(p => p.Added.HoursFromNow() < 0 && p.GuildId == guildId).ToList();
+        if (toBeRemoved.Count > 0)
+        {
+            _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
+        }
+
+        await SaveDbAsync();
         foreach (var player in _medImmunities.Where(p => p.GuildId == guildId))
         {
             sb.Append($"{player.DisplayName} has med immunity for {12 - player.Added.HoursFromNow()} hours\n");
         }
+
         return sb.ToString();
     }
 
-    public static async Task ClearListOfImmunePlayersAsync (List<SocketGuildUser> playersToBeRemoved)
+    public static async Task<string> GetMedImmunePlayerStringAsync (ulong? guildId, List<SocketGuildUser> voiceUsers)
+    {
+        StringBuilder sb = new StringBuilder();
+        List<MedicImmunePlayer> toBeRemoved
+            = _medImmunities.Where(p => p.Added.HoursFromNow() < 0 && p.GuildId == guildId).ToList();
+        if (toBeRemoved.Count > 0)
+        {
+            _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
+        }
+
+        await SaveDbAsync();
+        foreach (var player in _medImmunities.Where(p => p.GuildId == guildId))
+        {
+            if (voiceUsers.Exists(vu => vu.Id == player.Id))
+            {
+                sb.Append($"{player.DisplayName} has med immunity for {12 - player.Added.HoursFromNow()} hours\n");
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    public static async Task ClearListOfImmunePlayersAsync (IEnumerable<SocketGuildUser> playersToBeRemoved)
     {
         _medImmunities.RemoveAll(m => playersToBeRemoved.Select(p => (MedicImmunePlayer)p).Contains(m));
         await SaveDbAsync();
@@ -97,7 +138,4 @@ public static partial class DataManager
         _medImmunities.RemoveAll(m => m.GuildId == player.Guild.Id && m.Id == player.Id);
         await SaveDbAsync();
     }
-    
-    
-
 }
