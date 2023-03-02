@@ -17,12 +17,8 @@ public static partial class DataManager
 
     public static async Task<ICollection<MedicImmunePlayer>> GetMedImmunePlayersAsync (ulong? guildId)
     {
-        List<MedicImmunePlayer> toBeRemoved
-            = _medImmunities.Where(p => p.Added.HoursFromNow() < 0 && p.GuildId == guildId).ToList();
-        if (toBeRemoved.Count > 0)
-        {
-            _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
-        }
+        RemoveOldImmunities(guildId.GetValueOrDefault());
+
 
         await SaveDbAsync();
         return _medImmunities;
