@@ -28,8 +28,8 @@ public static partial class DataManager
     {
         get => _instantSpin;
         set => _instantSpin = value;
-    } 
-    
+    }
+
     public static ulong DevId
     {
         get => _devId;
@@ -40,12 +40,12 @@ public static partial class DataManager
     {
         get => EasySetup.MedDbFileName + ".json";
     }
-    
+
     private static string GuildDataDb
     {
         get => EasySetup.GuildDbFileName + ".json";
     }
-    
+
     private static string PlayerStatsDb
     {
         get => EasySetup.StatsDbFileName + ".json";
@@ -87,7 +87,6 @@ public static partial class DataManager
 
     private static async Task RetrieveDbAsync ()
     {
-
         await using (FileStream fs = new FileStream(MedImmunityDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
@@ -99,7 +98,7 @@ public static partial class DataManager
                 }
             }
         }
-        
+
         await using (FileStream fs = new FileStream(GuildDataDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
@@ -111,7 +110,7 @@ public static partial class DataManager
                 }
             }
         }
-        
+
         await using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
@@ -127,8 +126,6 @@ public static partial class DataManager
 
     private static void RetrieveDb ()
     {
-
-        
         using (FileStream fs = new FileStream(MedImmunityDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
@@ -140,7 +137,7 @@ public static partial class DataManager
                 }
             }
         }
-        
+
         using (FileStream fs = new FileStream(GuildDataDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
@@ -152,7 +149,7 @@ public static partial class DataManager
                 }
             }
         }
-        
+
         using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
@@ -168,17 +165,15 @@ public static partial class DataManager
 
     private static async Task SaveDbAsync ()
     {
-
-        
         await using (FileStream fs = new FileStream(MedImmunityDb, FileMode.Truncate, FileAccess.Write))
         {
             await using (StreamWriter sw = new StreamWriter(fs))
             {
-                var storedImmunities =_medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
+                var storedImmunities = _medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
                 await sw.WriteAsync(JsonSerializer.Serialize(storedImmunities));
             }
         }
-        
+
         await using (FileStream fs = new FileStream(GuildDataDb, FileMode.Truncate, FileAccess.Write))
         {
             await using (StreamWriter sw = new StreamWriter(fs))
@@ -186,7 +181,7 @@ public static partial class DataManager
                 await sw.WriteAsync(JsonSerializer.Serialize(_guildSettingsData));
             }
         }
-        
+
         await using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.Truncate, FileAccess.Write))
         {
             await using (StreamWriter sw = new StreamWriter(fs))
@@ -198,16 +193,15 @@ public static partial class DataManager
 
     private static void SaveDb ()
     {
-
         using (FileStream fs = new FileStream(MedImmunityDb, FileMode.Truncate, FileAccess.Write))
         {
             using (StreamWriter sw = new StreamWriter(fs))
             {
-                var storedImmunities =_medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
+                var storedImmunities = _medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
                 sw.Write(JsonSerializer.Serialize(storedImmunities));
             }
         }
-        
+
         using (FileStream fs = new FileStream(GuildDataDb, FileMode.Truncate, FileAccess.Write))
         {
             using (StreamWriter sw = new StreamWriter(fs))
@@ -215,7 +209,7 @@ public static partial class DataManager
                 sw.Write(JsonSerializer.Serialize(_guildSettingsData));
             }
         }
-        
+
         using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.Truncate, FileAccess.Write))
         {
             using (StreamWriter sw = new StreamWriter(fs))
@@ -224,6 +218,4 @@ public static partial class DataManager
             }
         }
     }
-
-
 }

@@ -62,10 +62,10 @@ public class Program
         await _client.StartAsync();
         Game g = new Game(EasySetup.ActivityText, EasySetup.ActivityType);
         await _client.SetActivityAsync(g);
-
-        _client.Ready                += Client_SetUp;
-        _client.SlashCommandExecuted += Client_CommandHandler;
-        _client.JoinedGuild          += Client_JoinedGuild;
+        _client.UserVoiceStateUpdated += Client_UserStateChanged;
+        _client.Ready                 += Client_SetUp;
+        _client.SlashCommandExecuted  += Client_CommandHandler;
+        _client.JoinedGuild           += Client_JoinedGuild;
 
         await Task.Delay(-1);
     }
@@ -236,5 +236,22 @@ public class Program
     private async Task Client_JoinedGuild (SocketGuild guild)
     {
         await DataManager.InitializeGuildDataAsync(guild);
+    }
+
+    private async Task Client_UserStateChanged (SocketUser user, SocketVoiceState previousState, SocketVoiceState newState)
+    {
+        ulong guildId     = previousState.VoiceChannel.Guild.Id;
+        bool  gameStarted = await DataManager.PreviousGuildGameEndedAsync(guildId, false);
+        if (gameStarted)
+        {
+            if (DataManager.GetGuildTeamChannel(guildId, newState.VoiceChannel.Id) != null)
+            {
+                DataManager.AddPlayerToGuildGame(guildId, user.Id);
+            }
+            else
+            {
+                DataManager.RemovePlayerFromGuildGame(guildId, user.Id);
+            }
+        }
     }
 }

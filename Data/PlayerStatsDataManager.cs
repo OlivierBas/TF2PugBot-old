@@ -14,6 +14,7 @@ public static partial class DataManager
             TryGeneratePlayerStats(userId, null);
             return _playerStats.FirstOrDefault(p => p.UserId == userId)!;
         }
+
         return ps;
     }
 
@@ -51,12 +52,12 @@ public static partial class DataManager
             {
                 newPs.GuildStats.Add(new PlayerGuildStats()
                 {
-                    GuildId = guildId.GetValueOrDefault(),
+                    GuildId    = guildId.GetValueOrDefault(),
                     LastPlayed = DateTime.Now
                 });
             }
-            _playerStats.Add(newPs);
 
+            _playerStats.Add(newPs);
         }
         else
         {
