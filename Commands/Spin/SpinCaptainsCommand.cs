@@ -14,6 +14,13 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
     {
         if (caller.IsConnectedToVoice())
         {
+            var connectedUsers = caller.VoiceChannel.ConnectedUsers;
+            int playersInVoice = connectedUsers.Count;
+            if (connectedUsers.Count >= 12)
+            {
+                await command.RespondAsync("Spin requires 12 players, ignoring.", ephemeral: true);
+            }
+            
             EmbedBuilder embedBuilder = new EmbedBuilder();
             embedBuilder.WithTitle("Spinning for Team Captain!");
             embedBuilder.WithColor(Color.Teal);
@@ -21,19 +28,17 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             if (await DataManager.PreviousGuildGameEndedAsync(command.GuildId.GetValueOrDefault(), true))
             {
                 var newImmunities = DataManager.GetTemporaryMedImmunePlayers(command.GuildId);
-
-                if (newImmunities.Count > 0)
+                
+                StringBuilder sb = new StringBuilder();
+                foreach (MedicImmunePlayer player in newImmunities)
                 {
-                    StringBuilder sb = new StringBuilder();
-                    foreach (MedicImmunePlayer player in newImmunities)
-                    {
-                        sb.AppendLine($"{player.DisplayName} will be granted med immunity for next medic spin");
-                    }
-
-                    embedBuilder.WithFooter(sb.ToString());
-
-                    await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
+                    sb.AppendLine($"{player.DisplayName} will be granted med immunity for next medic spin");
                 }
+
+                embedBuilder.WithFooter(sb.ToString());
+
+                await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
+                
             }
 
 
