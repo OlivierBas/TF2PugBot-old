@@ -243,8 +243,7 @@ public class Program
                                                 SocketVoiceState newState)
     {
         ulong guildId   = previousState.VoiceChannel.Guild.Id;
-        bool  gameEnded = await DataManager.PreviousGuildGameEndedAsync(guildId, false);
-        if (!gameEnded)
+        if (!DataManager.GuildGameHasEnded(guildId))
         {
             if (DataManager.GetGuildTeamChannel(guildId, newState.VoiceChannel.Id) != null)
             {

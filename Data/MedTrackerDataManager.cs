@@ -15,7 +15,7 @@ public static partial class DataManager
 
     public static IReadOnlyCollection<MedicImmunePlayer> TrackedMedImmunities => _medImmunities.AsReadOnly();
 
-    public static async Task<ICollection<MedicImmunePlayer>> GetMedImmunePlayersAsync (ulong? guildId)
+    public static async Task<List<MedicImmunePlayer>> GetMedImmunePlayersAsync (ulong? guildId)
     {
         RemoveOldImmunities(guildId.GetValueOrDefault());
 
@@ -30,7 +30,7 @@ public static partial class DataManager
         return result;
     }
 
-    public static void PrepareMedImmunity (SocketGuildUser player, Team team)
+    public static void PrepareTempMedImmunity (SocketGuildUser player, Team team)
     {
         var medicImmunePlayer = new MedicImmunePlayer()
         {
@@ -58,23 +58,26 @@ public static partial class DataManager
 
     public static async Task MakePermanentImmunitiesAsync (ulong guildId)
     {
-        foreach (var medicImmunePlayer in _temporaryMedicImmunities[guildId])
+        if (GuildGameHasEnded(guildId))
         {
-            if (medicImmunePlayer.Added.MinutesFromNow() > 4)
+            foreach (var tempImmunePlayer in _temporaryMedicImmunities[guildId])
             {
-                if (_medImmunities.Contains(medicImmunePlayer))
+
+                if (_medImmunities.Contains(tempImmunePlayer))
                 {
-                    _medImmunities.FirstOrDefault(p => p.Id == medicImmunePlayer.Id
-                                                    && p.GuildId == medicImmunePlayer.GuildId)!.Added = DateTime.Now;
+                    _medImmunities.FirstOrDefault(p => p.Id == tempImmunePlayer.Id
+                                                    && p.GuildId == tempImmunePlayer.GuildId)!.Added = DateTime.Now;
                     continue;
                 }
 
-                _medImmunities.Add(medicImmunePlayer);
+                _medImmunities.Add(tempImmunePlayer);
+                
             }
+
+            _temporaryMedicImmunities[guildId] = new MedicImmunePlayer[2];
+            await SaveDbAsync();
         }
 
-        _temporaryMedicImmunities[guildId] = new MedicImmunePlayer[2];
-        await SaveDbAsync();
     }
 
     public static async Task<string> GetMedImmunePlayerStringAsync (ulong? guildId)
@@ -85,7 +88,7 @@ public static partial class DataManager
         await SaveDbAsync();
         foreach (var player in _medImmunities.Where(p => p.GuildId == guildId))
         {
-            sb.Append($"{player.DisplayName} has med immunity for {12 - player.Added.HoursFromNow()} hours\n");
+            sb.Append($"{player.DisplayName} has med immunity for {Constants.MedImmunityClearHours - player.Added.HoursFromNow()} hours\n");
         }
 
         return sb.ToString();
@@ -101,7 +104,7 @@ public static partial class DataManager
         {
             if (voiceUsers.Exists(vu => vu.Id == player.Id))
             {
-                sb.Append($"{player.DisplayName} has med immunity for {12 - player.Added.HoursFromNow()} hours\n");
+                sb.Append($"{player.DisplayName} has med immunity for {Constants.MedImmunityClearHours - player.Added.HoursFromNow()} hours\n");
             }
         }
 
@@ -111,7 +114,7 @@ public static partial class DataManager
     private static void RemoveOldImmunities (ulong guildId)
     {
         List<MedicImmunePlayer> toBeRemoved
-            = _medImmunities.Where(p => 12 - p.Added.HoursFromNow() <= 0 && p.GuildId == guildId).ToList();
+            = _medImmunities.Where(p => Constants.MedImmunityClearHours - p.Added.HoursFromNow() <= 0 && p.GuildId == guildId).ToList();
         if (toBeRemoved.Count > 0)
         {
             _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));

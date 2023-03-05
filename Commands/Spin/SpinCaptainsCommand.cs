@@ -16,21 +16,23 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
             int playersInVoice = connectedUsers.Count;
-            if (connectedUsers.Count < 11)
+            if (playersInVoice < 11)
             {
                 await command.RespondAsync("Spin requires 12 players, ignoring.", ephemeral: true);
                 return;
             }
-            
+
+            ulong guildId = command.GuildId.GetValueOrDefault();
+
             EmbedBuilder embedBuilder = new EmbedBuilder();
             embedBuilder.WithTitle("Spinning for Team Captain!");
             embedBuilder.WithColor(Color.Teal);
 
             try
             {
-                if (await DataManager.PreviousGuildGameEndedAsync(command.GuildId.GetValueOrDefault(), true))
+                if (DataManager.GuildGameHasEnded(guildId))
                 {
-                    var newImmunities = DataManager.GetTemporaryMedImmunePlayers(command.GuildId.GetValueOrDefault());
+                    var newImmunities = DataManager.GetTemporaryMedImmunePlayers(guildId);
 
                     if (newImmunities is not null)
                     {
@@ -42,39 +44,35 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
 
                         embedBuilder.WithFooter(sb.ToString());
 
-                        await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
+                        await DataManager.MakePermanentImmunitiesAsync(guildId);
                     }
-
-                
                 }
 
 
-  
-
-
-            List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder,
-                                                        SpinMode.Duo, DataManager.InstantSpin);
-            if (winners is not null)
-            {
-
-                if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
+                List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder,
+                                                            SpinMode.Duo, DataManager.InstantSpin);
+                if (winners is not null)
                 {
-                    await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
+                    DataManager.StartNewGuildGame(guildId);
+                    await DataManager.UpdatePlayerStatsAsync(winners[0].Id, guildId,
+                                                             StatTypes.CaptainSpinsWon);
+                    await DataManager.UpdatePlayerStatsAsync(winners[1].Id, guildId,
+                                                             StatTypes.CaptainSpinsWon);
+                    
+                    if (DataManager.GuildHasPingsEnabled(guildId))
+                    {
+                        await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
+                    }
+                    else
+                    {
+                        await command.FollowupAsync(
+                            $"{winners[0].DisplayName} and {winners[1].DisplayName} are team captains!");
+                    }
+                    
+                    // await command.FollowupAsync($"winner");
                 }
-                else
-                {
-                    await command.FollowupAsync(
-                        $"{winners[0].DisplayName} and {winners[1].DisplayName} are team captains!");
-                }
-                DataManager.StartGuildGame(command.GuildId.GetValueOrDefault());
-                await DataManager.UpdatePlayerStatsAsync(winners[0].Id, command.GuildId.GetValueOrDefault(),
-                                                         StatTypes.CaptainSpinsWon);
-                await DataManager.UpdatePlayerStatsAsync(winners[1].Id, command.GuildId.GetValueOrDefault(),
-                                                         StatTypes.CaptainSpinsWon);
-                // await command.FollowupAsync($"winner");
-            }
 
-            return;
+                return;
             }
             catch (Exception ex)
             {

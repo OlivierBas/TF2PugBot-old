@@ -7,8 +7,7 @@ namespace TF2PugBot.Data;
 public static partial class DataManager
 {
     private static List<GuildSettingsData> _guildSettingsData = new List<GuildSettingsData>();
-    private static Dictionary<ulong, GuildGameData> _lastGuildGame = new Dictionary<ulong, GuildGameData>();
-    private static Dictionary<ulong, List<ulong>> _guildGamePlayers = new Dictionary<ulong, List<ulong>>();
+    private static Dictionary<ulong, GuildGameData> _trackedGuildGame = new Dictionary<ulong, GuildGameData>();
 
     public static async Task InitializeGuildDataAsync (SocketGuild guild)
     {
@@ -21,41 +20,50 @@ public static partial class DataManager
         await SaveDbAsync();
     }
 
-    public static void StartGuildGame (ulong guildId)
+    public static void StartNewGuildGame (ulong guildId)
     {
-        if (!_lastGuildGame.ContainsKey(guildId))
+        if (!_trackedGuildGame.ContainsKey(guildId))
         {
-            _lastGuildGame.Add(guildId, new GuildGameData());
+            _trackedGuildGame.Add(guildId, new GuildGameData());
         }
         else
         {
-            _lastGuildGame[guildId].StartDate = DateTime.Now;
+            _trackedGuildGame[guildId] = new GuildGameData();
         }
     }
 
-
-    public static async Task<bool> PreviousGuildGameEndedAsync (ulong guildId, bool clear)
+    public static bool GuildGameHasEnded (ulong guildId)
     {
-        if (_lastGuildGame.ContainsKey(guildId))
+        if (_trackedGuildGame.ContainsKey(guildId))
         {
-            if (_lastGuildGame[guildId].StartDate.MinutesFromNow() >= 0)
+            if (_trackedGuildGame[guildId].StartDate.MinutesFromNow() >= Constants.GuildGameMinDuration)
             {
-                if (clear)
-                {
-                    foreach (var player in _lastGuildGame[guildId].Players)
-                    {
-                        await UpdatePlayerStatsAsync(player, guildId, StatTypes.GamesPlayed);
-                    }
-
-                    _lastGuildGame[guildId] = new GuildGameData();
-                }
-
                 return true;
             }
         }
 
         return false;
     }
+
+    public static async Task<bool> TryEndGuildGame (ulong guildId)
+    {
+        if (_trackedGuildGame.ContainsKey(guildId))
+        {
+            var guildGame = _trackedGuildGame[guildId];
+            if (guildGame.StartDate.MinutesFromNow() >= Constants.GuildGameMinDuration)
+            {
+                foreach (var player in guildGame.Players)
+                {
+                    await UpdatePlayerStatsAsync(player, guildId, StatTypes.GamesPlayed);
+                }
+
+                _trackedGuildGame[guildId] = new GuildGameData(); // reset the tracked guild game.
+                return true;
+            }   
+        }
+        return false;
+    }
+    
 
     /*public static void AddPlayersToGuildGame (ulong guildId, params ulong[] userIds)
     {
@@ -74,19 +82,22 @@ public static partial class DataManager
 
     public static void AddPlayerToGuildGame (ulong guildId, ulong userId)
     {
-        if (!_guildGamePlayers.ContainsKey(guildId))
+        if (!_trackedGuildGame.ContainsKey(guildId))
         {
-            _guildGamePlayers.Add(guildId, new List<ulong>());
+            _trackedGuildGame[guildId].Players.Add(userId);
         }
-
-        _guildGamePlayers[guildId].Add(userId);
+        else
+        {
+            // Otherwise create a new trackedGuildGame and add the first player.
+            _trackedGuildGame.Add(guildId, new GuildGameData() {Players = new List<ulong>() {userId}});
+        }
     }
 
     public static void RemovePlayerFromGuildGame (ulong guildId, ulong userId)
     {
-        if (_guildGamePlayers.ContainsKey(guildId))
+        if (!_trackedGuildGame.ContainsKey(guildId))
         {
-            _guildGamePlayers[guildId].Remove(userId);
+            _trackedGuildGame[guildId].Players.Remove(userId);
         }
     }
 
