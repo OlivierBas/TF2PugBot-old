@@ -31,6 +31,21 @@ public static partial class DataManager
             _trackedGuildGame[guildId] = new GuildGameData();
         }
     }
+    public static void StartNewGuildGame (ulong guildId, List<SocketGuildUser> players)
+    {
+        if (!_trackedGuildGame.ContainsKey(guildId))
+        {
+            _trackedGuildGame.Add(guildId, new GuildGameData() {Players = players.Select(p => p.Id).ToList(), LockPlayers = true});
+        }
+        else
+        {
+            _trackedGuildGame[guildId] = new GuildGameData()
+            {
+                Players = players.Select(p => p.Id).ToList(),
+                LockPlayers = true
+            };
+        }
+    }
 
     public static bool GuildGameHasEnded (ulong guildId)
     {
@@ -84,10 +99,14 @@ public static partial class DataManager
     {
         if (!_trackedGuildGame.ContainsKey(guildId))
         {
-            _trackedGuildGame[guildId].Players.Add(userId);
+            if (!_trackedGuildGame[guildId].LockPlayers)
+            {
+                _trackedGuildGame[guildId].Players.Add(userId);
+            }
         }
         else
         {
+
             // Otherwise create a new trackedGuildGame and add the first player.
             _trackedGuildGame.Add(guildId, new GuildGameData() {Players = new List<ulong>() {userId}});
         }
@@ -97,8 +116,10 @@ public static partial class DataManager
     {
         if (!_trackedGuildGame.ContainsKey(guildId))
         {
-            _trackedGuildGame[guildId].Players.Remove(userId);
-        }
+            if (!_trackedGuildGame[guildId].LockPlayers)
+            {
+                _trackedGuildGame[guildId].Players.Remove(userId);
+            }        }
     }
 
     public static Team? GetGuildTeamChannel (ulong guildId, ulong channelId)
