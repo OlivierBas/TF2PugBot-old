@@ -26,21 +26,30 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             embedBuilder.WithTitle("Spinning for Team Captain!");
             embedBuilder.WithColor(Color.Teal);
 
-            if (await DataManager.PreviousGuildGameEndedAsync(command.GuildId.GetValueOrDefault(), true))
+            try
             {
-                var newImmunities = DataManager.GetTemporaryMedImmunePlayers(command.GuildId);
-                
-                StringBuilder sb = new StringBuilder();
-                foreach (MedicImmunePlayer player in newImmunities)
+                if (await DataManager.PreviousGuildGameEndedAsync(command.GuildId.GetValueOrDefault(), true))
                 {
-                    sb.AppendLine($"{player.DisplayName} will be granted med immunity for next medic spin");
+                    var newImmunities = DataManager.GetTemporaryMedImmunePlayers(command.GuildId.GetValueOrDefault());
+
+                    if (newImmunities is not null)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        foreach (MedicImmunePlayer player in newImmunities)
+                        {
+                            sb.AppendLine($"{player.DisplayName} will be granted med immunity for next medic spin");
+                        }
+
+                        embedBuilder.WithFooter(sb.ToString());
+
+                        await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
+                    }
+
+                
                 }
 
-                embedBuilder.WithFooter(sb.ToString());
 
-                await DataManager.MakePermanentImmunitiesAsync(command.GuildId.GetValueOrDefault());
-                
-            }
+  
 
 
             List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder,
@@ -66,6 +75,11 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             }
 
             return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message + ex.StackTrace);
+            }
         }
 
         await command.RespondAsync("You are not in a voice channel with other players!", ephemeral: true);

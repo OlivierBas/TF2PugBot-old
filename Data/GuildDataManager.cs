@@ -38,7 +38,7 @@ public static partial class DataManager
     {
         if (_lastGuildGame.ContainsKey(guildId))
         {
-            if (_lastGuildGame[guildId].StartDate.MinutesFromNow() > 5)
+            if (_lastGuildGame[guildId].StartDate.MinutesFromNow() >= 0)
             {
                 if (clear)
                 {

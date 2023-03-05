@@ -24,9 +24,10 @@ public static partial class DataManager
         return _medImmunities;
     }
 
-    public static ICollection<MedicImmunePlayer> GetTemporaryMedImmunePlayers (ulong? guildId)
+    public static MedicImmunePlayer[]? GetTemporaryMedImmunePlayers (ulong? guildId)
     {
-        return _temporaryMedicImmunities.FirstOrDefault(m => m.Key == guildId).Value.ToList();
+        _temporaryMedicImmunities.TryGetValue(guildId.GetValueOrDefault(), out var result);
+        return result;
     }
 
     public static void PrepareMedImmunity (SocketGuildUser player, Team team)

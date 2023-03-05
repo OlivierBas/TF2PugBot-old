@@ -23,11 +23,11 @@ public static partial class DataManager
         try
         {
             PlayerStats?      ps  = GetPlayerStats(userId);
-            PlayerGuildStats? psg = ps.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
+            PlayerGuildStats? psg = ps?.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
             if (psg is null)
             {
                 TryGeneratePlayerStats(userId, guildId);
-                return ps.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
+                return ps?.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
             }
 
             return psg;
