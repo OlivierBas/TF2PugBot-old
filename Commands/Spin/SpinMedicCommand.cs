@@ -56,6 +56,13 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
 
             if (winners is not null)
             {
+                if (DataManager.GuildGameHasEnded(guildId))
+                {
+                    await DataManager.TryEndGuildGame(guildId);
+                    DataManager.StartNewGuildGame(guildId, connectedUsers.ToList());
+                }
+                
+                
                 DataManager.PrepareTempMedImmunity(winners[0], vcTeam.GetValueOrDefault());
                 await DataManager.UpdatePlayerStatsAsync(winners[0].Id, guildId,
                                                          StatTypes.MedicSpinsWon);

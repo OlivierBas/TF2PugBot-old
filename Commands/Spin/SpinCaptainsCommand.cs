@@ -46,6 +46,8 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
 
                         await DataManager.MakePermanentImmunitiesAsync(guildId);
                     }
+
+                    await DataManager.TryEndGuildGame(guildId);
                 }
 
 
