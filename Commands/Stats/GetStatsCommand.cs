@@ -14,40 +14,41 @@ public class GetStatsCommand : ICommand
         try
         {
             var           argsUser      = command.Data.Options;
-        EmbedBuilder  embedBuilder  = new EmbedBuilder();
-        StringBuilder stringBuilder = new StringBuilder();
-        if (argsUser is null || argsUser.Count == 0)
-        {
-            var psg = DataManager.GetPlayerGuildStats(caller.Id, command.GuildId.GetValueOrDefault());
-            BuildTexts(embedBuilder, stringBuilder, psg, caller);
-
-            await command.RespondAsync(embed: embedBuilder.Build());
-        }
-        else
-        {
-            try
+            EmbedBuilder  embedBuilder  = new EmbedBuilder();
+            StringBuilder stringBuilder = new StringBuilder();
+            if (argsUser is null
+             || argsUser.Count == 0)
             {
-                SocketGuildUser user = (SocketGuildUser)argsUser.First().Value;
-                var psg = DataManager.GetPlayerGuildStats(user.Id, command.GuildId.GetValueOrDefault());
-                BuildTexts(embedBuilder, stringBuilder, psg, user);
-                
+                var psg = DataManager.GetPlayerGuildStats(caller.Id, command.GuildId.GetValueOrDefault());
+                BuildTexts(embedBuilder, stringBuilder, psg, caller);
+
                 await command.RespondAsync(embed: embedBuilder.Build());
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine(ex);
-                await command.RespondAsync("Something went wrong. The user specified is invalid", ephemeral: true);
+                try
+                {
+                    SocketGuildUser user = (SocketGuildUser)argsUser.First().Value;
+                    var             psg = DataManager.GetPlayerGuildStats(user.Id, command.GuildId.GetValueOrDefault());
+                    BuildTexts(embedBuilder, stringBuilder, psg, user);
+
+                    await command.RespondAsync(embed: embedBuilder.Build());
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    await command.RespondAsync("Something went wrong. The user specified is invalid", ephemeral: true);
+                }
             }
-        }
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message + ex.StackTrace);
         }
-        
     }
 
-    private void BuildTexts (EmbedBuilder embedBuilder, StringBuilder stringBuilder, PlayerGuildStats psg, SocketGuildUser user)
+    private void BuildTexts (EmbedBuilder embedBuilder, StringBuilder stringBuilder, PlayerGuildStats psg,
+                             SocketGuildUser user)
     {
         embedBuilder.WithTitle($"{user.DisplayName}'s stats");
         embedBuilder.WithThumbnailUrl(user.GetDisplayAvatarUrl());

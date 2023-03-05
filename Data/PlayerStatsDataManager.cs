@@ -20,22 +20,17 @@ public static partial class DataManager
 
     public static PlayerGuildStats? GetPlayerGuildStats (ulong userId, ulong guildId)
     {
-        try
-        {
-            PlayerStats?      ps  = GetPlayerStats(userId);
-            PlayerGuildStats? psg = ps.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
-            if (psg is null)
-            {
-                TryGeneratePlayerStats(userId, guildId);
-                return ps.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
-            }
 
-            return psg;
-        }
-        catch (Exception ex)
+        PlayerStats?      ps  = GetPlayerStats(userId);
+        PlayerGuildStats? psg = ps?.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
+        if (psg is null)
         {
-            Console.WriteLine(ex.Message + ex.StackTrace);
+            TryGeneratePlayerStats(userId, guildId);
+            return ps?.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
         }
+
+        return psg;
+
 
         return null;
     }
