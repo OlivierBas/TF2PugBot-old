@@ -47,7 +47,7 @@ public static partial class DataManager
                         await UpdatePlayerStatsAsync(player, guildId, StatTypes.GamesPlayed);
                     }
 
-                    _lastGuildGame.Remove(guildId);
+                    _lastGuildGame[guildId] = new GuildGameData();
                 }
 
                 return true;

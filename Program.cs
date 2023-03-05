@@ -60,8 +60,9 @@ public class Program
         _client = new DiscordSocketClient();
         await _client.LoginAsync(TokenType.Bot, DataManager.Token);
         await _client.StartAsync();
-        Game g = new Game(EasySetup.ActivityText, EasySetup.ActivityType);
-        await _client.SetActivityAsync(g);
+        Game game = new Game(EasySetup.ActivityText, EasySetup.ActivityType);
+        await _client.SetActivityAsync(game);
+
         _client.UserVoiceStateUpdated += Client_UserStateChanged;
         _client.Ready                 += Client_SetUp;
         _client.SlashCommandExecuted  += Client_CommandHandler;
@@ -238,11 +239,12 @@ public class Program
         await DataManager.InitializeGuildDataAsync(guild);
     }
 
-    private async Task Client_UserStateChanged (SocketUser user, SocketVoiceState previousState, SocketVoiceState newState)
+    private async Task Client_UserStateChanged (SocketUser user, SocketVoiceState previousState,
+                                                SocketVoiceState newState)
     {
-        ulong guildId     = previousState.VoiceChannel.Guild.Id;
-        bool  gameStarted = await DataManager.PreviousGuildGameEndedAsync(guildId, false);
-        if (gameStarted)
+        ulong guildId   = previousState.VoiceChannel.Guild.Id;
+        bool  gameEnded = await DataManager.PreviousGuildGameEndedAsync(guildId, false);
+        if (!gameEnded)
         {
             if (DataManager.GetGuildTeamChannel(guildId, newState.VoiceChannel.Id) != null)
             {
