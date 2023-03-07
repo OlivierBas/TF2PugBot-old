@@ -45,6 +45,7 @@ public static partial class DataManager
             _temporaryMedicImmunities.Add(player.Guild.Id, new MedicImmunePlayer[2]);
         }
 
+
         switch (team)
         {
             case Team.RED:
@@ -54,27 +55,33 @@ public static partial class DataManager
                 _temporaryMedicImmunities[player.Guild.Id][(int)team] = medicImmunePlayer;
                 break;
         }
+
     }
 
     public static async Task MakePermanentImmunitiesAsync (ulong guildId)
     {
         if (GuildGameHasEnded(guildId))
         {
-            foreach (var tempImmunePlayer in _temporaryMedicImmunities[guildId])
+            if (_temporaryMedicImmunities.ContainsKey(guildId))
             {
-
-                if (_medImmunities.Contains(tempImmunePlayer))
+                foreach (var tempImmunePlayer in _temporaryMedicImmunities[guildId])
                 {
-                    _medImmunities.FirstOrDefault(p => p.Id == tempImmunePlayer.Id
-                                                    && p.GuildId == tempImmunePlayer.GuildId)!.Added = DateTime.Now;
-                    continue;
+                    if (tempImmunePlayer is not null)
+                    {
+                        if (_medImmunities.Contains(tempImmunePlayer))
+                        {
+                            _medImmunities.FirstOrDefault(p => p.Id == tempImmunePlayer.Id
+                                                            && p.GuildId == tempImmunePlayer.GuildId)!.Added = DateTime.Now;
+                            continue;
+                        }
+                        _medImmunities.Add(tempImmunePlayer);
+                    }
+
                 }
 
-                _medImmunities.Add(tempImmunePlayer);
-                
+                _temporaryMedicImmunities[guildId] = new MedicImmunePlayer[2];
             }
 
-            _temporaryMedicImmunities[guildId] = new MedicImmunePlayer[2];
             await SaveDbAsync();
         }
 

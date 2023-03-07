@@ -35,7 +35,8 @@ public static partial class DataManager
     {
         if (!_trackedGuildGame.ContainsKey(guildId))
         {
-            _trackedGuildGame.Add(guildId, new GuildGameData() {Players = players.Select(p => p.Id).ToList(), LockPlayers = true});
+            _trackedGuildGame.Add(
+                guildId, new GuildGameData() { Players = players.Select(p => p.Id).ToList(), LockPlayers = true });
         }
         else
         {
@@ -67,18 +68,23 @@ public static partial class DataManager
             var guildGame = _trackedGuildGame[guildId];
             if (guildGame.StartDate.MinutesFromNow() >= Constants.GuildGameMinDuration)
             {
+                if (guildGame.Players.Count == 0)
+                {
+                    Console.WriteLine($"Something went wrong, guild game {guildId} had 0 players");
+                }
                 foreach (var player in guildGame.Players)
                 {
-                    await UpdatePlayerStatsAsync(player, guildId, StatTypes.GamesPlayed);
+                    await UpdatePlayerStatsAsync(guildId, StatTypes.GamesPlayed, player);
+                    Console.WriteLine($"user {player}, Increased Games Played");
                 }
-
                 _trackedGuildGame[guildId] = new GuildGameData(); // reset the tracked guild game.
                 return true;
-            }   
+            }
         }
+
         return false;
     }
-    
+
 
     /*public static void AddPlayersToGuildGame (ulong guildId, params ulong[] userIds)
     {
@@ -106,9 +112,8 @@ public static partial class DataManager
         }
         else
         {
-
             // Otherwise create a new trackedGuildGame and add the first player.
-            _trackedGuildGame.Add(guildId, new GuildGameData() {Players = new List<ulong>() {userId}});
+            _trackedGuildGame.Add(guildId, new GuildGameData() { Players = new List<ulong>() { userId } });
         }
     }
 

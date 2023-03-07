@@ -54,6 +54,10 @@ public static partial class DataManager
     static DataManager ()
     {
         RetrieveDb();
+        foreach (var guilds in _guildSettingsData)
+        {
+            _trackedGuildGame.Add(guilds.GuildId, new GuildGameData());
+        }
     }
 
     public static bool HasAccessToCommand (ulong? guildId, SocketGuildUser caller)
