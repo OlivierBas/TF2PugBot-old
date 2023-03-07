@@ -20,7 +20,6 @@ public static partial class DataManager
 
     public static PlayerGuildStats? GetPlayerGuildStats (ulong userId, ulong guildId)
     {
-
         PlayerStats?      ps  = GetPlayerStats(userId);
         PlayerGuildStats? psg = ps?.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
         if (psg is null)
@@ -68,23 +67,27 @@ public static partial class DataManager
         }
     }
 
-    public static async Task UpdatePlayerStatsAsync (ulong userId, ulong guildId, StatTypes stat)
+    public static async Task UpdatePlayerStatsAsync (ulong guildId, StatTypes stat, params ulong[] userIds)
     {
-        var ps = GetPlayerGuildStats(userId, guildId);
-        if (ps is not null)
+        foreach (var userId in userIds)
         {
-            switch (stat)
+            var psg = GetPlayerGuildStats(userId, guildId);
+            Console.WriteLine($"Increasing {userId}'s {stat} in {guildId}");
+            if (psg is not null)
             {
-                case StatTypes.GamesPlayed:
-                    ps.GamesPlayed++;
-                    ps.LastPlayed = DateTime.Now;
-                    break;
-                case StatTypes.CaptainSpinsWon:
-                    ps.WonCaptainSpins++;
-                    break;
-                case StatTypes.MedicSpinsWon:
-                    ps.WonMedicSpins++;
-                    break;
+                switch (stat)
+                {
+                    case StatTypes.GamesPlayed:
+                        psg.GamesPlayed++;
+                        psg.LastPlayed = DateTime.Now;
+                        break;
+                    case StatTypes.CaptainSpinsWon:
+                        psg.WonCaptainSpins++;
+                        break;
+                    case StatTypes.MedicSpinsWon:
+                        psg.WonMedicSpins++;
+                        break;
+                }
             }
 
             await SaveDbAsync();

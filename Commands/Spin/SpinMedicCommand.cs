@@ -15,11 +15,11 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
             int playersInVoice = connectedUsers.Count;
-            if (playersInVoice < 6)
+            /*if (playersInVoice < 6)
             {
                 await command.RespondAsync("Spin requires 6 players, ignoring.", ephemeral: true);
                 return;
-            }
+            }*/
 
             ulong guildId = command.GuildId.GetValueOrDefault();
             Team? vcTeam = DataManager.GetGuildTeamChannel(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
@@ -58,14 +58,16 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
             {
                 if (DataManager.GuildGameHasEnded(guildId))
                 {
+                    Console.WriteLine("smix attempted (we believe atleast), close the previous game and start smix game");
                     await DataManager.TryEndGuildGame(guildId);
                     DataManager.StartNewGuildGame(guildId, connectedUsers.ToList());
                 }
                 
                 
                 DataManager.PrepareTempMedImmunity(winners[0], vcTeam.GetValueOrDefault());
-                await DataManager.UpdatePlayerStatsAsync(winners[0].Id, guildId,
-                                                         StatTypes.MedicSpinsWon);
+                await DataManager.UpdatePlayerStatsAsync(guildId,
+                                                         StatTypes.MedicSpinsWon,
+                                                         winners.Select(w => w.Id).ToArray());
 
                 if (DataManager.GuildHasPingsEnabled(guildId))
                 {

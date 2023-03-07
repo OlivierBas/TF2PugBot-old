@@ -16,15 +16,17 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
             int playersInVoice = connectedUsers.Count;
-            if (playersInVoice < 11)
+            if (playersInVoice < 7)
             {
-                await command.RespondAsync("Spin requires 12 players, ignoring.", ephemeral: true);
+                await command.RespondAsync("Spin requires atleast 7 players, ignoring.", ephemeral: true);
                 return;
             }
 
             ulong guildId = command.GuildId.GetValueOrDefault();
 
-            EmbedBuilder embedBuilder = new EmbedBuilder();
+            EmbedBuilder  embedBuilder = new EmbedBuilder();
+            StringBuilder sb           = new StringBuilder();
+
             embedBuilder.WithTitle("Spinning for Team Captain!");
             embedBuilder.WithColor(Color.Teal);
 
@@ -32,14 +34,16 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
             {
                 if (DataManager.GuildGameHasEnded(guildId))
                 {
-                    var newImmunities = DataManager.GetTemporaryMedImmunePlayers(guildId);
+                    MedicImmunePlayer[]? newImmunities = DataManager.GetTemporaryMedImmunePlayers(guildId);
 
                     if (newImmunities is not null)
                     {
-                        StringBuilder sb = new StringBuilder();
                         foreach (MedicImmunePlayer player in newImmunities)
                         {
-                            sb.AppendLine($"{player.DisplayName} will be granted med immunity for next medic spin");
+                            if (player is not null)
+                            {
+                                sb.AppendLine($"{player.DisplayName} will be granted med immunity for next medic spin");
+                            }
                         }
 
                         embedBuilder.WithFooter(sb.ToString());
@@ -56,11 +60,10 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
                 if (winners is not null)
                 {
                     DataManager.StartNewGuildGame(guildId);
-                    await DataManager.UpdatePlayerStatsAsync(winners[0].Id, guildId,
-                                                             StatTypes.CaptainSpinsWon);
-                    await DataManager.UpdatePlayerStatsAsync(winners[1].Id, guildId,
-                                                             StatTypes.CaptainSpinsWon);
-                    
+                    await DataManager.UpdatePlayerStatsAsync(guildId,
+                                                             StatTypes.CaptainSpinsWon,
+                                                             winners.Select(w => w.Id).ToArray());
+
                     if (DataManager.GuildHasPingsEnabled(guildId))
                     {
                         await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
@@ -70,7 +73,7 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
                         await command.FollowupAsync(
                             $"{winners[0].DisplayName} and {winners[1].DisplayName} are team captains!");
                     }
-                    
+
                     // await command.FollowupAsync($"winner");
                 }
 
