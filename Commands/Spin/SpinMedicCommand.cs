@@ -15,11 +15,11 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
             int playersInVoice = connectedUsers.Count;
-            /*if (playersInVoice < 6)
+            if (playersInVoice < 6)
             {
                 await command.RespondAsync("Spin requires 6 players, ignoring.", ephemeral: true);
                 return;
-            }*/
+            }
 
             ulong guildId = command.GuildId.GetValueOrDefault();
             Team? vcTeam = DataManager.GetGuildTeamChannel(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
@@ -44,10 +44,9 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
             
             List<SocketGuildUser> currentMedSpinners
                 = connectedUsers.Where(cu => !activeMedImmunities.Exists(ip => ip.Id == cu.Id)).ToList();
-            
             if (currentMedSpinners.Count == 0)
             {
-                await DataManager.ClearListOfImmunePlayersAsync(connectedUsers); // REMOVE EVERYONE'S IMMUNITY!
+                embedBuilder.WithFooter("Too many immune players, ignoring immunities.");
                 currentMedSpinners = connectedUsers.ToList();
             }
 
