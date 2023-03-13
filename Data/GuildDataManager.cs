@@ -30,7 +30,10 @@ public static partial class DataManager
         {
             _trackedGuildGame[guildId] = new GuildGameData();
         }
+
+        Console.WriteLine($"Guild game started for guild {guildId}");
     }
+
     public static void StartNewGuildGame (ulong guildId, List<SocketGuildUser> players)
     {
         if (!_trackedGuildGame.ContainsKey(guildId))
@@ -42,10 +45,12 @@ public static partial class DataManager
         {
             _trackedGuildGame[guildId] = new GuildGameData()
             {
-                Players = players.Select(p => p.Id).ToList(),
+                Players     = players.Select(p => p.Id).ToList(),
                 LockPlayers = true
             };
         }
+
+        Console.WriteLine($"Guild game started for guild {guildId} with {players.Count} players");
     }
 
     public static bool GuildGameHasEnded (ulong guildId)
@@ -60,13 +65,13 @@ public static partial class DataManager
 
         return false;
     }
-    
+
     public static async Task EnsureGuildGameEnded (ulong guildId)
     {
-        if(_trackedGuildGame.ContainsKey(guildId))
+        if (_trackedGuildGame.ContainsKey(guildId))
         {
             var guildGame = _trackedGuildGame[guildId];
-            if (guildGame.StartDate.HoursFromNow() >= 2) 
+            if (guildGame.StartDate.HoursFromNow() >= 2)
             {
                 await TryEndGuildGame(guildId);
             }
@@ -84,11 +89,13 @@ public static partial class DataManager
                 {
                     Console.WriteLine($"Something went wrong, guild game {guildId} had 0 players");
                 }
+
                 foreach (var player in guildGame.Players)
                 {
                     await UpdatePlayerStatsAsync(guildId, StatTypes.GamesPlayed, player);
                     Console.WriteLine($"user {player}, Increased Games Played");
                 }
+
                 _trackedGuildGame[guildId] = new GuildGameData(); // reset the tracked guild game.
                 return true;
             }
@@ -115,10 +122,12 @@ public static partial class DataManager
 
     public static void AddPlayerToGuildGame (ulong guildId, ulong userId)
     {
-        if (!_trackedGuildGame.ContainsKey(guildId))
+        if (_trackedGuildGame.ContainsKey(guildId))
         {
+            Console.WriteLine($"Guild game has: {_trackedGuildGame[guildId].Players.Count} players.");
             if (!_trackedGuildGame[guildId].LockPlayers)
             {
+                Console.WriteLine($"And now adding {userId} to count.");
                 _trackedGuildGame[guildId].Players.Add(userId);
             }
         }
@@ -133,10 +142,13 @@ public static partial class DataManager
     {
         if (!_trackedGuildGame.ContainsKey(guildId))
         {
+            Console.WriteLine($"Guild game has: {_trackedGuildGame[guildId].Players.Count} players.");
             if (!_trackedGuildGame[guildId].LockPlayers)
             {
+                Console.WriteLine($"And now removing {userId} from count.");
                 _trackedGuildGame[guildId].Players.Remove(userId);
-            }        }
+            }
+        }
     }
 
     public static Team? GetGuildTeamChannel (ulong guildId, ulong channelId)
