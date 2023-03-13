@@ -16,22 +16,17 @@ public abstract class BaseSpinCommand
         Random        rng            = new Random();
         StringBuilder sb             = new StringBuilder();
 
-
-        if (playersInVoice < 3)
-        {
-            await command.RespondAsync("Too few players to spin.", ephemeral: true);
-            return null;
-        }
+        
 
         await command.DeferAsync();
 
         if (instant)
         {
-            int rollX = rng.Next(0, playersInVoice + 1);
-            int rollY = rng.Next(0, playersInVoice + 1);
+            int rollX = rng.Next(0, playersInVoice);
+            int rollY = rng.Next(0, playersInVoice);
             while (rollY == rollX)
             {
-                rollY = rng.Next(0, playersInVoice + 1);
+                rollY = rng.Next(0, playersInVoice);
             }
 
             await SendRollsAsync(rollX, rollY, command, sb, embedBuilder, players, spinMode, true);
