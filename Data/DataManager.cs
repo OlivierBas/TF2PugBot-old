@@ -45,11 +45,16 @@ public static class DataManager
     {
         get => EasySetup.GuildDbFileName + ".json";
     }
+    private static string MapDataDb
+    {
+        get => EasySetup.MapsDbFileName + ".json";
+    }
 
     private static string PlayerStatsDb
     {
         get => EasySetup.StatsDbFileName + ".json";
     }
+
 
     static DataManager ()
     {
@@ -93,6 +98,17 @@ public static class DataManager
                 }
             }
         }
+        using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.OpenOrCreate, FileAccess.Read))
+        {
+            using (StreamReader sr = new StreamReader(fs))
+            {
+                string data = sr.ReadToEnd();
+                if (data.Length > 0)
+                {
+                    MapManager.GuildMapData = JsonSerializer.Deserialize<List<GuildMapData>>(data)!;
+                }
+            }
+        }
     }
 
     public static async Task SaveDbAsync (SaveType save)
@@ -131,6 +147,13 @@ public static class DataManager
                 }
                 break;
             case SaveType.GuildMaps:
+                await using (FileStream fs = new FileStream(MapDataDb, FileMode.Truncate, FileAccess.Write))
+                {
+                    await using (StreamWriter sw = new StreamWriter(fs))
+                    {
+                        await sw.WriteAsync(JsonSerializer.Serialize(MapManager.GuildMapData));
+                    }
+                }
                 break;
         }
     }
