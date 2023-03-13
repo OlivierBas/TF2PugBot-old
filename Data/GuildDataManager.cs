@@ -71,8 +71,9 @@ public static partial class DataManager
         if (_trackedGuildGame.ContainsKey(guildId))
         {
             var guildGame = _trackedGuildGame[guildId];
-            if (guildGame.StartDate.HoursFromNow() >= 2)
+            if (guildGame.StartDate.HoursFromNow() >= 2) // If 2 hours have passed, just end the game.
             {
+                Console.WriteLine($"Two hours passed, forcefully ending guild game for {guildId}.");
                 await TryEndGuildGame(guildId);
             }
         }

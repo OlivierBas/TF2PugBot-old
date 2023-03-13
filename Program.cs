@@ -255,5 +255,9 @@ public class Program
                 DataManager.RemovePlayerFromGuildGame(guildId, user.Id);
             }
         }
+        else
+        {
+            await DataManager.EnsureGuildGameEnded(guildId);
+        }
     }
 }
