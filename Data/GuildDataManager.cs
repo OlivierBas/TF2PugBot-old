@@ -60,6 +60,18 @@ public static partial class DataManager
 
         return false;
     }
+    
+    public static async EnsureGuildGameEnded (ulong guildId)
+    {
+        if(_trackedGuildGame.ContainsKey(guildId))
+        {
+            var guildGame = _trackedGuildGame[guildId];
+            if (guildGame.StartDate.HoursFromNow() >= 2) 
+            {
+                await TryEndGuildGame();
+            }
+        }
+    }
 
     public static async Task<bool> TryEndGuildGame (ulong guildId)
     {
