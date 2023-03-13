@@ -245,8 +245,9 @@ public class Program
         ulong guildId   = previousState.VoiceChannel.Guild.Id;
         if (!DataManager.GuildGameHasEnded(guildId))
         {
-            if (DataManager.GetGuildTeamChannel(guildId, newState.VoiceChannel.Id) != null)
+            if (DataManager.TryGetGuildTeamChannel(guildId, newState.VoiceChannel.Id, out Team? teamChannel))
             {
+                Console.WriteLine($"Game has started and {user.Username} joined {teamChannel.ToString()}");
                 DataManager.AddPlayerToGuildGame(guildId, user.Id);
             }
             else
