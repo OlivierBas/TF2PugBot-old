@@ -38,10 +38,12 @@ public class SpinMapCommand : BaseSpinCommand, ICommand
                 
                 MapManager.PrepareMapIgnore(guildId, wonMap[0]);
                 await command.RespondAsync($"{wonMap[0].MapName} won the map spin.");
+                return;
             }
 
             await command.RespondAsync(
                 "A game has to be running for a map spin (Roll captains first, or medic if smix)", ephemeral: true);
+            return;
         }
 
         await command.RespondAsync("Something went HORRIBLY wrong! :)", ephemeral: true);
