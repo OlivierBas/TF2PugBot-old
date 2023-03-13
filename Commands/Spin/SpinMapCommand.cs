@@ -22,7 +22,7 @@ public class SpinMapCommand : BaseSpinCommand, ICommand
                 embedBuilder.WithTitle("Spinning for map");
                 embedBuilder.WithColor(Color.Red);
                 var ignoredGuildMaps = await MapManager.GetIgnoredMapsAsync(guildId);
-                var guildMaps        = MapManager.GetGuildMaps(guildId);
+                var guildMaps        = await MapManager.GetGuildMapsAsync(guildId);
 
                 embedBuilder.WithFooter(await MapManager.GetIgnoredMapsAsStringAsync(guildId));
 
@@ -35,6 +35,8 @@ public class SpinMapCommand : BaseSpinCommand, ICommand
 
                 var wonMap = await Spin<SixesMap>(command, rollingMaps, embedBuilder, SpinMode.Solo,
                                                   EasySetup.InstantSpins);
+                
+                MapManager.PrepareMapIgnore(guildId, wonMap[0]);
                 await command.RespondAsync($"{wonMap[0].MapName} won the map spin.");
             }
 

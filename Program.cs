@@ -88,6 +88,10 @@ public class Program
         var medicSpinCommand = new SlashCommandBuilder()
                                .WithName("spinformedic")
                                .WithDescription("Spin for Medic (Be in Voice Channel)");
+        
+        var mapSpinCommand = new SlashCommandBuilder()
+                             .WithName("spinformap")
+                             .WithDescription("Spin for map");
 
         var getStatsCommand = new SlashCommandBuilder()
                               .WithName("stats")
@@ -153,6 +157,32 @@ public class Program
         modifyImmunityCommand.AddOption("get", ApplicationCommandOptionType.SubCommand,
                                         "Check all the medic immune players");
 
+        var configureMapPoolCommand = new SlashCommandBuilder()
+                                      .WithName("configure-mappool")
+                                      .WithDescription("Add or remove maps from the map pool.")
+                                      .AddOption(new SlashCommandOptionBuilder()
+                                                 .WithName("add")
+                                                 .WithDescription("Add map to map pool")
+                                                 .WithType(ApplicationCommandOptionType.SubCommandGroup)
+                                                 .AddOption("value", ApplicationCommandOptionType.String,
+                                                            "The map to be added to the pool", isRequired: true))
+                                      .AddOption(new SlashCommandOptionBuilder()
+                                                 .WithName("remove")
+                                                 .WithDescription("Remove map from map pool")
+                                                 .WithType(ApplicationCommandOptionType.SubCommandGroup)
+                                                 .AddOption("value", ApplicationCommandOptionType.String,
+                                                            "The map to be removed from the pool", isRequired: true));
+
+        var configureMapTimeOutCommand = new SlashCommandBuilder()
+                                         .WithName("configure-maptimeout")
+                                         .WithDescription(
+                                             "Change the amount of hours that need to pass for a map to be played again")
+                                         .AddOption("hours", ApplicationCommandOptionType.Integer,
+                                                    "Hours needed to pass for map to be played again (Default: 2)",
+                                                    isRequired: true);
+
+
+
         try
         {
             await CommandCreator.CreateCommandAsync(devGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
@@ -165,14 +195,23 @@ public class Program
                                                     CommandNames.ModifyMedicImmunity);
             await CommandCreator.CreateCommandAsync(devGuild, getStatsCommand.Build(), CommandNames.GetStats);
             await CommandCreator.CreateCommandAsync(devGuild, setPingUsersCommand.Build(), CommandNames.SetPings);
+            await CommandCreator.CreateCommandAsync(devGuild, configureMapTimeOutCommand.Build(),
+                                                    CommandNames.ConfigureMapTimeOut);
+            await CommandCreator.CreateCommandAsync(devGuild, configureMapPoolCommand.Build(),
+                                                    CommandNames.ConfigureMapPool);
+            await CommandCreator.CreateCommandAsync(devGuild, mapSpinCommand.Build(),
+                                                    CommandNames.MapSpin);
 
-            /*await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(medicSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(setTeamChannelCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(setManagementRoleCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(modifyImmunityCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(getStatsCommand.Build());
-            await _client.CreateGlobalApplicationCommandAsync(setPingUsersCommand.Build());*/
+            await _client.CreateGlobalApplicationCommandAsync(setPingUsersCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(configureMapTimeOutCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(configureMapPoolCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(mapSpinCommand.Build());
         }
         catch (Exception ex)
         {
@@ -226,6 +265,12 @@ public class Program
                 case CommandNames.GetStats:
                     await new GetStatsCommand().PerformAsync(command, caller);
                     break;
+                case CommandNames.ConfigureMapPool:
+                    await new ConfigureMapPoolCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.MapSpin:
+                    await new SpinMapCommand().PerformAsync(command, caller);
+                    break;
             }
         }
         catch (Exception ex)
@@ -242,7 +287,7 @@ public class Program
     private async Task Client_UserStateChanged (SocketUser user, SocketVoiceState previousState,
                                                 SocketVoiceState newState)
     {
-        ulong guildId   = previousState.VoiceChannel.Guild.Id;
+        ulong guildId = previousState.VoiceChannel.Guild.Id;
         if (!GuildManager.GuildGameHasEnded(guildId))
         {
             if (GuildManager.TryGetGuildTeamChannel(guildId, newState.VoiceChannel.Id, out Team? teamChannel))

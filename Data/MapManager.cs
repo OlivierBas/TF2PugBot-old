@@ -15,12 +15,13 @@ public static class MapManager
         set => _guildMapData = value;
     }
 
-    public static List<SixesMap> GetGuildMaps (ulong guildId)
+    public static async Task<List<SixesMap>> GetGuildMapsAsync (ulong guildId)
     {
         var guildMapData = _guildMapData.FirstOrDefault(g => g.GuildId == guildId);
         if (guildMapData is null)
         {
             _guildMapData.Add(new GuildMapData() { GuildId = guildId });
+            await DataManager.SaveDbAsync(SaveType.GuildMaps);
             return _guildMapData.FirstOrDefault(g => g.GuildId == guildId)!.Maps;
         }
 
@@ -69,17 +70,19 @@ public static class MapManager
         }
     }
 
-    public static async Task AddMapToGuildMaps (ulong guildId, string mapName)
+    public static async Task AddMapToGuildMapsAsync (ulong guildId, string mapName)
     {
-        var maps = GetGuildMaps(guildId);
+        mapName = mapName.FirstLetterUppercase();
+        var maps = await GetGuildMapsAsync(guildId);
         maps.Add(mapName);
         await DataManager.SaveDbAsync(SaveType.GuildMaps);
 
     }
 
-    public static async Task RemoveMapFromGuildMaps (ulong guildId, string mapName)
+    public static async Task RemoveMapFromGuildMapsAsync (ulong guildId, string mapName)
     {
-        var maps = GetGuildMaps(guildId);
+        mapName = mapName.FirstLetterUppercase();
+        var maps = await GetGuildMapsAsync(guildId);
         maps.RemoveAll(m => m.MapName == mapName);
         await DataManager.SaveDbAsync(SaveType.GuildMaps);
     }
@@ -93,6 +96,21 @@ public static class MapManager
         else
         {
             _trackedMapIgnore[guildId] = new IgnoredSixesMap() {MapName = mapName};
+        }
+    }
+
+    public static async Task UpdateMapTimeout (ulong guildId, int hours)
+    {
+        var guildMapData = _guildMapData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildMapData is not null)
+        {
+            guildMapData.HoursBeforeMapClear = hours;
+            await DataManager.SaveDbAsync(SaveType.GuildMaps);
+        }
+        else
+        {
+            _guildMapData.Add(new GuildMapData() {GuildId = guildId, HoursBeforeMapClear = hours});
+            await DataManager.SaveDbAsync(SaveType.GuildMaps);
         }
     }
 }
