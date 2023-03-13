@@ -170,6 +170,28 @@ public static partial class DataManager
         return null;
     }
 
+    public static bool TryGetGuildTeamChannel (ulong guildId, ulong channelId, out Team? team)
+    {
+        var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildData is not null)
+        {
+            if (guildData.BluTeamVoiceChannelId == channelId)
+            {
+                team = Team.BLU;
+                return true;
+            }
+
+            if (guildData.RedTeamVoiceChannelId == channelId)
+            {
+                team = Team.BLU;
+                return true;
+            }
+        }
+
+        team = null;
+        return false;
+    }
+
     public static bool GuildHasPingsEnabled (ulong guildId)
     {
         var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
