@@ -55,7 +55,7 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
                 }
 
 
-                List<SocketGuildUser>? winners = await Spin(command, caller.VoiceChannel.ConnectedUsers, embedBuilder,
+                List<SocketGuildUser>? winners = await SpinUsers(command, caller.VoiceChannel.ConnectedUsers, embedBuilder,
                                                             SpinMode.Duo, DataManager.InstantSpin);
                 if (winners is not null)
                 {

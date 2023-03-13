@@ -51,7 +51,7 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
             }
 
             List<SocketGuildUser>? winners
-                = await Spin(command, currentMedSpinners, embedBuilder, SpinMode.Solo, DataManager.InstantSpin);
+                = await SpinUsers(command, currentMedSpinners, embedBuilder, SpinMode.Solo, DataManager.InstantSpin);
 
             if (winners is not null)
             {
