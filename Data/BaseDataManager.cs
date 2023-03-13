@@ -6,7 +6,7 @@ using TF2PugBot.Types;
 
 namespace TF2PugBot.Data;
 
-public static partial class DataManager
+public static class DataManager
 {
     private static string _token = string.Empty;
     private static bool _instantSpin;
@@ -54,78 +54,6 @@ public static partial class DataManager
     static DataManager ()
     {
         RetrieveDb();
-        foreach (var guilds in _guildSettingsData)
-        {
-            _trackedGuildGame.Add(guilds.GuildId, new GuildGameData());
-        }
-    }
-
-    public static bool HasAccessToCommand (ulong? guildId, SocketGuildUser caller)
-    {
-        var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
-        if (guildData is not null)
-        {
-            if (caller.Roles.Any(r => r.Id == guildData.AdminRoleId))
-            {
-                return true;
-            }
-
-            if (caller.Roles.Any(r => r.Permissions.Administrator))
-            {
-                return true;
-            }
-
-            if (caller.Guild.OwnerId == caller.Id)
-            {
-                return true;
-            }
-
-            if (caller.Id == _devId)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static async Task RetrieveDbAsync ()
-    {
-        await using (FileStream fs = new FileStream(MedImmunityDb, FileMode.OpenOrCreate, FileAccess.Read))
-        {
-            using (StreamReader sr = new StreamReader(fs))
-            {
-                string data = await sr.ReadToEndAsync();
-                if (data.Length > 0)
-                {
-                    _medImmunities = JsonSerializer.Deserialize<List<MedicImmunePlayer>>(data)!;
-                }
-            }
-        }
-
-        await using (FileStream fs = new FileStream(GuildDataDb, FileMode.OpenOrCreate, FileAccess.Read))
-        {
-            using (StreamReader sr = new StreamReader(fs))
-            {
-                string data = await sr.ReadToEndAsync();
-                if (data.Length > 0)
-                {
-                    _guildSettingsData = JsonSerializer.Deserialize<List<GuildSettingsData>>(data)!;
-                }
-            }
-        }
-
-        await using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.OpenOrCreate, FileAccess.Read))
-        {
-            using (StreamReader sr = new StreamReader(fs))
-            {
-                string data = await sr.ReadToEndAsync();
-                if (data.Length > 0)
-                {
-                    _playerStats = JsonSerializer.Deserialize<List<PlayerStats>>(data)!;
-                }
-            }
-        }
     }
 
     private static void RetrieveDb ()
@@ -137,7 +65,7 @@ public static partial class DataManager
                 string data = sr.ReadToEnd();
                 if (data.Length > 0)
                 {
-                    _medImmunities = JsonSerializer.Deserialize<List<MedicImmunePlayer>>(data)!;
+                    MedManager.MedImmunities = JsonSerializer.Deserialize<List<MedicImmunePlayer>>(data)!;
                 }
             }
         }
@@ -149,7 +77,7 @@ public static partial class DataManager
                 string data = sr.ReadToEnd();
                 if (data.Length > 0)
                 {
-                    _guildSettingsData = JsonSerializer.Deserialize<List<GuildSettingsData>>(data)!;
+                    GuildManager.GuildSettings = JsonSerializer.Deserialize<List<GuildSettingsData>>(data)!;
                 }
             }
         }
@@ -161,65 +89,49 @@ public static partial class DataManager
                 string data = sr.ReadToEnd();
                 if (data.Length > 0)
                 {
-                    _playerStats = JsonSerializer.Deserialize<List<PlayerStats>>(data)!;
+                    StatsManager.PlayerStats = JsonSerializer.Deserialize<List<PlayerStats>>(data)!;
                 }
             }
         }
     }
 
-    private static async Task SaveDbAsync ()
+    public static async Task SaveDbAsync (SaveType save)
     {
-        await using (FileStream fs = new FileStream(MedImmunityDb, FileMode.Truncate, FileAccess.Write))
+        switch (save)
         {
-            await using (StreamWriter sw = new StreamWriter(fs))
-            {
-                var storedImmunities = _medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
-                await sw.WriteAsync(JsonSerializer.Serialize(storedImmunities));
-            }
-        }
-
-        await using (FileStream fs = new FileStream(GuildDataDb, FileMode.Truncate, FileAccess.Write))
-        {
-            await using (StreamWriter sw = new StreamWriter(fs))
-            {
-                await sw.WriteAsync(JsonSerializer.Serialize(_guildSettingsData));
-            }
-        }
-
-        await using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.Truncate, FileAccess.Write))
-        {
-            await using (StreamWriter sw = new StreamWriter(fs))
-            {
-                await sw.WriteAsync(JsonSerializer.Serialize(_playerStats));
-            }
-        }
-    }
-
-    private static void SaveDb ()
-    {
-        using (FileStream fs = new FileStream(MedImmunityDb, FileMode.Truncate, FileAccess.Write))
-        {
-            using (StreamWriter sw = new StreamWriter(fs))
-            {
-                var storedImmunities = _medImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId }).ToList();
-                sw.Write(JsonSerializer.Serialize(storedImmunities));
-            }
-        }
-
-        using (FileStream fs = new FileStream(GuildDataDb, FileMode.Truncate, FileAccess.Write))
-        {
-            using (StreamWriter sw = new StreamWriter(fs))
-            {
-                sw.Write(JsonSerializer.Serialize(_guildSettingsData));
-            }
-        }
-
-        using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.Truncate, FileAccess.Write))
-        {
-            using (StreamWriter sw = new StreamWriter(fs))
-            {
-                sw.Write(JsonSerializer.Serialize(_playerStats));
-            }
+            case SaveType.MedImmunities:
+                await using (FileStream fs = new FileStream(MedImmunityDb, FileMode.Truncate, FileAccess.Write))
+                {
+                    await using (StreamWriter sw = new StreamWriter(fs))
+                    {
+                        var storedImmunities = MedManager.MedImmunities.DistinctBy(mi => new { mi.Id, mi.GuildId })
+                                                         .ToList();
+                        await sw.WriteAsync(JsonSerializer.Serialize(storedImmunities));
+                    }
+                }
+                break;
+            
+            case SaveType.PlayerStats:
+                await using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.Truncate, FileAccess.Write))
+                {
+                    await using (StreamWriter sw = new StreamWriter(fs))
+                    {
+                        await sw.WriteAsync(JsonSerializer.Serialize(StatsManager.PlayerStats));
+                    }
+                }
+                break;
+            
+            case SaveType.GuildData:
+                await using (FileStream fs = new FileStream(GuildDataDb, FileMode.Truncate, FileAccess.Write))
+                {
+                    await using (StreamWriter sw = new StreamWriter(fs))
+                    {
+                        await sw.WriteAsync(JsonSerializer.Serialize(GuildManager.GuildSettings));
+                    }
+                }
+                break;
+            case SaveType.GuildMaps:
+                break;
         }
     }
 }

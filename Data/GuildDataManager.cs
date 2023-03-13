@@ -4,10 +4,47 @@ using TF2PugBot.Types;
 
 namespace TF2PugBot.Data;
 
-public static partial class DataManager
+public static class GuildManager
 {
     private static List<GuildSettingsData> _guildSettingsData = new List<GuildSettingsData>();
     private static Dictionary<ulong, GuildGameData> _trackedGuildGame = new Dictionary<ulong, GuildGameData>();
+
+    public static List<GuildSettingsData> GuildSettings
+    {
+        get => _guildSettingsData;
+        set => _guildSettingsData = value;
+    }
+
+
+
+    public static bool HasAccessToCommand (ulong? guildId, SocketGuildUser caller)
+    {
+        var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildData is not null)
+        {
+            if (caller.Roles.Any(r => r.Id == guildData.AdminRoleId))
+            {
+                return true;
+            }
+
+            if (caller.Roles.Any(r => r.Permissions.Administrator))
+            {
+                return true;
+            }
+
+            if (caller.Guild.OwnerId == caller.Id)
+            {
+                return true;
+            }
+
+            if (caller.Id == DataManager.DevId)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public static async Task InitializeGuildDataAsync (SocketGuild guild)
     {
@@ -16,8 +53,10 @@ public static partial class DataManager
             return;
         }
 
+        _trackedGuildGame.Add(guild.Id, new GuildGameData());
+        
         _guildSettingsData.Add(new GuildSettingsData() { GuildId = guild.Id });
-        await SaveDbAsync();
+        await DataManager.SaveDbAsync(SaveType.GuildData);
     }
 
     public static void StartNewGuildGame (ulong guildId)
@@ -93,7 +132,7 @@ public static partial class DataManager
 
                 foreach (var player in guildGame.Players)
                 {
-                    await UpdatePlayerStatsAsync(guildId, StatTypes.GamesPlayed, player);
+                    await StatsManager.UpdatePlayerStatsAsync(guildId, StatTypes.GamesPlayed, player);
                     Console.WriteLine($"user {player}, Increased Games Played");
                 }
 
@@ -210,7 +249,8 @@ public static partial class DataManager
         if (guildData is not null)
         {
             guildData.AdminRoleId = role.Id;
-            await SaveDbAsync();
+            await DataManager.SaveDbAsync(SaveType.GuildData);
+            
         }
     }
 
@@ -220,7 +260,7 @@ public static partial class DataManager
         if (guildData is not null)
         {
             guildData.PingOnSpin = value;
-            await SaveDbAsync();
+            await DataManager.SaveDbAsync(SaveType.GuildData);
         }
     }
 
@@ -232,7 +272,7 @@ public static partial class DataManager
             bool success = guildData.TryUpdateValue(team, channelId);
             if (success)
             {
-                await SaveDbAsync();
+                await DataManager.SaveDbAsync(SaveType.GuildData);
                 return success;
             }
         }

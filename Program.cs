@@ -181,7 +181,7 @@ public class Program
 
         foreach (var joinedGuild in _client.Guilds)
         {
-            await DataManager.InitializeGuildDataAsync(joinedGuild);
+            await GuildManager.InitializeGuildDataAsync(joinedGuild);
         }
 
         Console.WriteLine($"Bot is running in {_client.Guilds.Count} guilds!");
@@ -236,28 +236,28 @@ public class Program
 
     private async Task Client_JoinedGuild (SocketGuild guild)
     {
-        await DataManager.InitializeGuildDataAsync(guild);
+        await GuildManager.InitializeGuildDataAsync(guild);
     }
 
     private async Task Client_UserStateChanged (SocketUser user, SocketVoiceState previousState,
                                                 SocketVoiceState newState)
     {
         ulong guildId   = previousState.VoiceChannel.Guild.Id;
-        if (!DataManager.GuildGameHasEnded(guildId))
+        if (!GuildManager.GuildGameHasEnded(guildId))
         {
-            if (DataManager.TryGetGuildTeamChannel(guildId, newState.VoiceChannel.Id, out Team? teamChannel))
+            if (GuildManager.TryGetGuildTeamChannel(guildId, newState.VoiceChannel.Id, out Team? teamChannel))
             {
                 Console.WriteLine($"Game has started and {user.Username} joined {teamChannel.ToString()}");
-                DataManager.AddPlayerToGuildGame(guildId, user.Id);
+                GuildManager.AddPlayerToGuildGame(guildId, user.Id);
             }
             else
             {
-                DataManager.RemovePlayerFromGuildGame(guildId, user.Id);
+                GuildManager.RemovePlayerFromGuildGame(guildId, user.Id);
             }
         }
         else
         {
-            await DataManager.EnsureGuildGameEnded(guildId);
+            await GuildManager.EnsureGuildGameEnded(guildId);
         }
     }
 }

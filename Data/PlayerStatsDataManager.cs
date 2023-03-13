@@ -2,9 +2,15 @@
 
 namespace TF2PugBot.Data;
 
-public static partial class DataManager
+public static class StatsManager
 {
     private static List<PlayerStats> _playerStats = new List<PlayerStats>();
+
+    public static List<PlayerStats> PlayerStats
+    {
+        get => _playerStats;
+        set => _playerStats = value;
+    }
 
     private static PlayerStats? GetPlayerStats (ulong userId)
     {
@@ -90,7 +96,7 @@ public static partial class DataManager
                 }
             }
 
-            await SaveDbAsync();
+            await DataManager.SaveDbAsync(SaveType.PlayerStats);
         }
     }
 }

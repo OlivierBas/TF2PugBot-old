@@ -30,3 +30,11 @@ public enum StatTypes
     CaptainSpinsWon,
     MedicSpinsWon,
 }
+
+public enum SaveType
+{
+    MedImmunities,
+    PlayerStats,
+    GuildData,
+    GuildMaps
+}

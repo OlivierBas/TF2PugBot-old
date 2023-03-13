@@ -8,14 +8,14 @@ public class ConfigurePingsCommand : ICommand
     /// <inheritdoc />
     public async Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller)
     {
-        if (DataManager.HasAccessToCommand(command.GuildId, caller))
+        if (GuildManager.HasAccessToCommand(command.GuildId, caller))
         {
             var argBool = command.Data.Options.First().Value;
 
             try
             {
                 bool value = (bool )argBool;
-                await DataManager.SetGuildPingsAsync(command.GuildId, value);
+                await GuildManager.SetGuildPingsAsync(command.GuildId, value);
                 
                 string action = value ? "enabled" : "disabled";
                 await command.RespondAsync($"Successfully `{action}` pings", ephemeral: true);

@@ -12,7 +12,7 @@ public class ConfigureTeamChannelCommand : ICommand
     /// <inheritdoc />
     public async Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller)
     {
-        if (DataManager.HasAccessToCommand(command.GuildId, caller))
+        if (GuildManager.HasAccessToCommand(command.GuildId, caller))
         {
             string bluOrRed   = command.Data.Options.First().Options.First().Name;
             var    argChannel = command.Data.Options.First().Options.First().Options.First().Value;
@@ -24,12 +24,12 @@ public class ConfigureTeamChannelCommand : ICommand
             
                 if (bluOrRed == "blu")
                 {
-                    success = await DataManager.UpdateGuildChannelDataAsync(command.GuildId.GetValueOrDefault(), Team.BLU, channel.Id);
+                    success = await GuildManager.UpdateGuildChannelDataAsync(command.GuildId.GetValueOrDefault(), Team.BLU, channel.Id);
 
                 }
                 else if (bluOrRed == "red")
                 {
-                    success = await DataManager.UpdateGuildChannelDataAsync(command.GuildId.GetValueOrDefault(), Team.RED, channel.Id);
+                    success = await GuildManager.UpdateGuildChannelDataAsync(command.GuildId.GetValueOrDefault(), Team.RED, channel.Id);
                 
                 }
             

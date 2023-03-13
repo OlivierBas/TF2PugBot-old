@@ -22,7 +22,7 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
             }
 
             ulong guildId = command.GuildId.GetValueOrDefault();
-            Team? vcTeam = DataManager.GetGuildTeamChannel(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
+            Team? vcTeam = GuildManager.GetGuildTeamChannel(command.GuildId.GetValueOrDefault(), caller.VoiceChannel.Id);
 
             if (vcTeam is null)
             {
@@ -37,10 +37,10 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
             embedBuilder.WithTitle($"Spinning for {vcTeam.ToString()} Medic!");
             embedBuilder.WithColor(Color.Red);
             embedBuilder.WithFooter(
-                await DataManager.GetMedImmunePlayerStringAsync(guildId,
+                await MedManager.GetMedImmunePlayerStringAsync(guildId,
                                                                 connectedUsers.ToList()));
 
-            List<MedicImmunePlayer> activeMedImmunities = await DataManager.GetMedImmunePlayersAsync(guildId);
+            List<MedicImmunePlayer> activeMedImmunities = await MedManager.GetMedImmunePlayersAsync(guildId);
             
             List<SocketGuildUser> currentMedSpinners
                 = connectedUsers.Where(cu => !activeMedImmunities.Exists(ip => ip.Id == cu.Id)).ToList();
@@ -55,20 +55,20 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
 
             if (winners is not null)
             {
-                if (DataManager.GuildGameHasEnded(guildId))
+                if (GuildManager.GuildGameHasEnded(guildId))
                 {
                     Console.WriteLine("smix attempted (we believe atleast), close the previous game and start smix game");
-                    await DataManager.TryEndGuildGame(guildId);
-                    DataManager.StartNewGuildGame(guildId, connectedUsers.ToList());
+                    await GuildManager.TryEndGuildGame(guildId);
+                    GuildManager.StartNewGuildGame(guildId, connectedUsers.ToList());
                 }
                 
                 
-                DataManager.PrepareTempMedImmunity(winners[0], vcTeam.GetValueOrDefault());
-                await DataManager.UpdatePlayerStatsAsync(guildId,
-                                                         StatTypes.MedicSpinsWon,
-                                                         winners.Select(w => w.Id).ToArray());
+                MedManager.PrepareTempMedImmunity(winners[0], vcTeam.GetValueOrDefault());
+                await StatsManager.UpdatePlayerStatsAsync(guildId,
+                                                          StatTypes.MedicSpinsWon,
+                                                          winners.Select(w => w.Id).ToArray());
 
-                if (DataManager.GuildHasPingsEnabled(guildId))
+                if (GuildManager.GuildHasPingsEnabled(guildId))
                 {
                     await command.FollowupAsync(
                         $"<@!{winners[0].Id}> is {vcTeam.ToString()} medic and will be granted med immunity after game end, unless re-spun!");

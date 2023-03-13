@@ -32,9 +32,9 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
 
             try
             {
-                if (DataManager.GuildGameHasEnded(guildId))
+                if (GuildManager.GuildGameHasEnded(guildId))
                 {
-                    MedicImmunePlayer[]? newImmunities = DataManager.GetTemporaryMedImmunePlayers(guildId);
+                    MedicImmunePlayer[]? newImmunities = MedManager.GetTemporaryMedImmunePlayers(guildId);
 
                     if (newImmunities is not null)
                     {
@@ -48,10 +48,10 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
 
                         embedBuilder.WithFooter(sb.ToString());
 
-                        await DataManager.MakePermanentImmunitiesAsync(guildId);
+                        await MedManager.MakePermanentImmunitiesAsync(guildId);
                     }
 
-                    await DataManager.TryEndGuildGame(guildId);
+                    await GuildManager.TryEndGuildGame(guildId);
                 }
 
 
@@ -59,12 +59,12 @@ public class SpinCaptainsCommand : BaseSpinCommand, ICommand
                                                             SpinMode.Duo, DataManager.InstantSpin);
                 if (winners is not null)
                 {
-                    DataManager.StartNewGuildGame(guildId);
-                    await DataManager.UpdatePlayerStatsAsync(guildId,
+                    GuildManager.StartNewGuildGame(guildId);
+                    await StatsManager.UpdatePlayerStatsAsync(guildId,
                                                              StatTypes.CaptainSpinsWon,
                                                              winners.Select(w => w.Id).ToArray());
 
-                    if (DataManager.GuildHasPingsEnabled(guildId))
+                    if (GuildManager.GuildHasPingsEnabled(guildId))
                     {
                         await command.FollowupAsync($"<@!{winners[0].Id}> and <@!{winners[1].Id}> are team captains!");
                     }
