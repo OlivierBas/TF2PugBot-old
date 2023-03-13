@@ -98,7 +98,7 @@ public static class DataManager
                 }
             }
         }
-        using (FileStream fs = new FileStream(PlayerStatsDb, FileMode.OpenOrCreate, FileAccess.Read))
+        using (FileStream fs = new FileStream(MapDataDb, FileMode.OpenOrCreate, FileAccess.Read))
         {
             using (StreamReader sr = new StreamReader(fs))
             {
