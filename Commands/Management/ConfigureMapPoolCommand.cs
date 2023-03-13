@@ -1,5 +1,6 @@
 ﻿using Discord.WebSocket;
 using TF2PugBot.Data;
+using TF2PugBot.Extensions;
 
 namespace TF2PugBot.Commands.Management;
 
@@ -16,20 +17,29 @@ public class ConfigureMapPoolCommand : ICommand
             try
             {
                 string mapName = (string)argMap;
-
+                bool   success = false;
+                mapName = mapName.FirstLetterUppercase();
                 if (addOrRemove == "add")
                 {
-                    await MapManager.AddMapToGuildMapsAsync(command.GuildId.GetValueOrDefault(), mapName);
+                    success = await MapManager.TryAddMapToGuildMapsAsync(command.GuildId.GetValueOrDefault(), mapName);
                 }
 
                 if (addOrRemove == "remove")
                 {
-                    await MapManager.RemoveMapFromGuildMapsAsync(command.GuildId.GetValueOrDefault(), mapName);
+                    success = await MapManager.TryRemoveMapFromGuildMapsAsync(command.GuildId.GetValueOrDefault(), mapName);
 
                 }
-                
-                string action = addOrRemove == "add" ? "added" : "removed";
-                await command.RespondAsync($"Successfully `{action}` {mapName} to the map pool", ephemeral: true);
+
+                if (success)
+                {
+                    string action = addOrRemove == "add" ? "added" : "removed";
+                    await command.RespondAsync($"Successfully {action} `{mapName}` to the map pool");
+                }
+                else
+                {
+                    await command.RespondAsync("Something went wrong. minimum map name length is 3 and a total of 20 maps are allowed.", ephemeral: true);
+                }
+
                 return;
 
             }

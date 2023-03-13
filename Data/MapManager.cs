@@ -43,7 +43,7 @@ public static class MapManager
             guildMapData.IgnoredMaps.Add(_trackedMapIgnore[guildId]);
             await DataManager.SaveDbAsync(SaveType.GuildMaps);
         }
-        
+
         return guildMapData.IgnoredMaps;
     }
 
@@ -70,21 +70,32 @@ public static class MapManager
         }
     }
 
-    public static async Task AddMapToGuildMapsAsync (ulong guildId, string mapName)
+    public static async Task<bool> TryAddMapToGuildMapsAsync (ulong guildId, string mapName)
     {
-        mapName = mapName.FirstLetterUppercase();
+        if (mapName.Length < 4)
+        {
+            return false;
+        }
+
         var maps = await GetGuildMapsAsync(guildId);
+        if (maps.Count >= 20)
+        {
+            return false;
+        }
+        
+        mapName = mapName.FirstLetterUppercase();
         maps.Add(mapName);
         await DataManager.SaveDbAsync(SaveType.GuildMaps);
-
+        return true;
     }
 
-    public static async Task RemoveMapFromGuildMapsAsync (ulong guildId, string mapName)
+    public static async Task<bool> TryRemoveMapFromGuildMapsAsync (ulong guildId, string mapName)
     {
         mapName = mapName.FirstLetterUppercase();
         var maps = await GetGuildMapsAsync(guildId);
         maps.RemoveAll(m => m.MapName == mapName);
         await DataManager.SaveDbAsync(SaveType.GuildMaps);
+        return true;
     }
 
     public static void PrepareMapIgnore (ulong guildId, string mapName)
