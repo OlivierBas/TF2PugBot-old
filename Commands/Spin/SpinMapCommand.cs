@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Discord;
+using Discord.Interactions;
 using Discord.WebSocket;
 using TF2PugBot.Data;
 using TF2PugBot.Types;
@@ -37,7 +38,7 @@ public class SpinMapCommand : BaseSpinCommand, ICommand
                                                   EasySetup.InstantSpins);
                 
                 MapManager.PrepareMapIgnore(guildId, wonMap[0]);
-                await command.RespondAsync($"{wonMap[0].MapName} won the map spin.");
+                await command.FollowupAsync($"{wonMap[0].MapName} won the map spin.");
                 return;
             }
 

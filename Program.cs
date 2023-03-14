@@ -276,6 +276,9 @@ public class Program
                 case CommandNames.ConfigureMapPool:
                     await new ConfigureMapPoolCommand().PerformAsync(command, caller);
                     break;
+                case CommandNames.ConfigureMapTimeOut:
+                    await new ConfigureMapTimeoutCommand().PerformAsync(command, caller);
+                    break;
                 case CommandNames.MapSpin:
                     await new SpinMapCommand().PerformAsync(command, caller);
                     break;
