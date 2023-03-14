@@ -141,7 +141,17 @@ public static class MedManager
 
     public static async Task ForceAddMedImmunePlayerAsync (SocketGuildUser player)
     {
-        _medImmunities.Add(player);
+        MedicImmunePlayer newPlayer = player;
+        if (_medImmunities.Contains(newPlayer))
+        {
+            // Player already exists, just bump the immunity.
+            _medImmunities.FirstOrDefault(p => p.Id == newPlayer.Id && p.GuildId == newPlayer.GuildId)!.Added = DateTime.Now;
+        }
+        else
+        {
+            _medImmunities.Add(player);
+        }
+
         await DataManager.SaveDbAsync(SaveType.MedImmunities);
     }
 
