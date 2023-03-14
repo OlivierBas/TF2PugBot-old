@@ -11,6 +11,7 @@ public enum CommandNames
     SetPings,
     ModifyMedicImmunity,
     GetStats,
+    GetMapPool,
     ConfigureMapPool,
     ConfigureMapTimeOut
 }

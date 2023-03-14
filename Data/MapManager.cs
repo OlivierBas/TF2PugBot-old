@@ -102,11 +102,11 @@ public static class MapManager
     {
         if (!_trackedMapIgnore.ContainsKey(guildId))
         {
-            _trackedMapIgnore.Add(guildId, new IgnoredSixesMap() {MapName = mapName});
+            _trackedMapIgnore.Add(guildId, new IgnoredSixesMap() { MapName = mapName });
         }
         else
         {
-            _trackedMapIgnore[guildId] = new IgnoredSixesMap() {MapName = mapName};
+            _trackedMapIgnore[guildId] = new IgnoredSixesMap() { MapName = mapName };
         }
     }
 
@@ -120,7 +120,7 @@ public static class MapManager
         }
         else
         {
-            _guildMapData.Add(new GuildMapData() {GuildId = guildId, HoursBeforeMapClear = hours});
+            _guildMapData.Add(new GuildMapData() { GuildId = guildId, HoursBeforeMapClear = hours });
             await DataManager.SaveDbAsync(SaveType.GuildMaps);
         }
     }

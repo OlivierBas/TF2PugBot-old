@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using TF2PugBot.Commands.Management;
+using TF2PugBot.Commands.Maps;
 using TF2PugBot.Commands.Modify;
 using TF2PugBot.Commands.Spin;
 using TF2PugBot.Commands.Stats;
@@ -163,13 +164,13 @@ public class Program
                                       .AddOption(new SlashCommandOptionBuilder()
                                                  .WithName("add")
                                                  .WithDescription("Add map to map pool")
-                                                 .WithType(ApplicationCommandOptionType.SubCommandGroup)
+                                                 .WithType(ApplicationCommandOptionType.SubCommand)
                                                  .AddOption("value", ApplicationCommandOptionType.String,
                                                             "The map to be added to the pool", isRequired: true))
                                       .AddOption(new SlashCommandOptionBuilder()
                                                  .WithName("remove")
                                                  .WithDescription("Remove map from map pool")
-                                                 .WithType(ApplicationCommandOptionType.SubCommandGroup)
+                                                 .WithType(ApplicationCommandOptionType.SubCommand)
                                                  .AddOption("value", ApplicationCommandOptionType.String,
                                                             "The map to be removed from the pool", isRequired: true));
 
@@ -180,6 +181,10 @@ public class Program
                                          .AddOption("hours", ApplicationCommandOptionType.Integer,
                                                     "Hours needed to pass for map to be played again (Default: 2)",
                                                     isRequired: true);
+
+        var getMapPoolCommand = new SlashCommandBuilder()
+                                .WithName("mappool")
+                                .WithDescription("Get the current map pool");
 
 
 
@@ -201,6 +206,8 @@ public class Program
                                                     CommandNames.ConfigureMapPool);
             await CommandCreator.CreateCommandAsync(devGuild, mapSpinCommand.Build(),
                                                     CommandNames.MapSpin);
+            await CommandCreator.CreateCommandAsync(devGuild, getMapPoolCommand.Build(),
+                                                    CommandNames.GetMapPool);
 
             await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(medicSpinCommand.Build());
@@ -212,6 +219,7 @@ public class Program
             await _client.CreateGlobalApplicationCommandAsync(configureMapTimeOutCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(configureMapPoolCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(mapSpinCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(getMapPoolCommand.Build());
         }
         catch (Exception ex)
         {
@@ -270,6 +278,9 @@ public class Program
                     break;
                 case CommandNames.MapSpin:
                     await new SpinMapCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.GetMapPool:
+                    await new GetMapPoolCommand().PerformAsync(command, caller);
                     break;
             }
         }
