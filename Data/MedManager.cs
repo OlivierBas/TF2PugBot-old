@@ -21,7 +21,7 @@ public static class MedManager
 
     public static async Task<List<MedicImmunePlayer>> GetMedImmunePlayersAsync (ulong? guildId)
     {
-        RemoveOldImmunities(guildId.GetValueOrDefault());
+        await RemoveOldImmunitiesAsync(guildId.GetValueOrDefault());
 
         await DataManager.SaveDbAsync(SaveType.MedImmunities);
         return _medImmunities;
@@ -93,7 +93,7 @@ public static class MedManager
     public static async Task<string> GetMedImmunePlayerStringAsync (ulong? guildId)
     {
         StringBuilder sb = new StringBuilder();
-        RemoveOldImmunities(guildId.GetValueOrDefault());
+        await RemoveOldImmunitiesAsync(guildId.GetValueOrDefault());
 
         await DataManager.SaveDbAsync(SaveType.MedImmunities);
         foreach (var player in _medImmunities.Where(p => p.GuildId == guildId))
@@ -107,7 +107,7 @@ public static class MedManager
     public static async Task<string> GetMedImmunePlayerStringAsync (ulong? guildId, List<SocketGuildUser> voiceUsers)
     {
         StringBuilder sb = new StringBuilder();
-        RemoveOldImmunities(guildId.GetValueOrDefault());
+        await RemoveOldImmunitiesAsync(guildId.GetValueOrDefault());
 
         await DataManager.SaveDbAsync(SaveType.MedImmunities);
         foreach (var player in _medImmunities.Where(p => p.GuildId == guildId))
@@ -121,7 +121,7 @@ public static class MedManager
         return sb.ToString();
     }
 
-    private static void RemoveOldImmunities (ulong guildId)
+    private static async Task RemoveOldImmunitiesAsync (ulong guildId)
     {
         List<MedicImmunePlayer> toBeRemoved
             = _medImmunities.Where(p => Constants.MedImmunityClearHours - p.Added.HoursFromNow() <= 0 && p.GuildId == guildId).ToList();
@@ -129,6 +129,8 @@ public static class MedManager
         {
             _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
         }
+
+        await DataManager.SaveDbAsync(SaveType.MedImmunities);
     }
 
     public static async Task ClearListOfImmunePlayersAsync (IEnumerable<SocketGuildUser> playersToBeRemoved)
