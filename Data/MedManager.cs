@@ -128,9 +128,10 @@ public static class MedManager
         if (toBeRemoved.Count > 0)
         {
             _medImmunities.RemoveAll(p => toBeRemoved.Contains(p));
+            await DataManager.SaveDbAsync(SaveType.MedImmunities);
+
         }
 
-        await DataManager.SaveDbAsync(SaveType.MedImmunities);
     }
 
     public static async Task ClearListOfImmunePlayersAsync (IEnumerable<SocketGuildUser> playersToBeRemoved)
