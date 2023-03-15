@@ -306,6 +306,11 @@ public class Program
         {
             if (GuildManager.TryGetGuildTeamChannel(guildId, newState.VoiceChannel.Id, out Team? teamChannel))
             {
+                if (GuildManager.TryGetGuildTeamChannel(guildId, previousState.VoiceChannel.Id, out Team? teamchannel))
+                {
+                    // Just leave if the user joins a different team channel.
+                    return;
+                }
                 Console.WriteLine($"Game has started and {user.Username} joined {teamChannel.ToString()}");
                 GuildManager.AddPlayerToGuildGame(guildId, user.Id);
             }
