@@ -27,10 +27,10 @@ public class SpinMapCommand : BaseSpinCommand, ICommand
 
                 embedBuilder.WithFooter(await MapManager.GetIgnoredMapsAsStringAsync(guildId));
 
-                var rollingMaps = guildMaps.Where(g => !ignoredGuildMaps.Contains(g)).ToList();
+                var rollingMaps = guildMaps.Where(g => !ignoredGuildMaps.Exists(m => m.MapName == g.MapName)).ToList();
                 if (rollingMaps.Count == 0)
                 {
-                    embedBuilder.WithFooter("Can't ignore any maps, re-rolling with all allowed.");
+                    embedBuilder.WithFooter("Can't ignore any maps, re-rolling with all maps.");
                     rollingMaps = guildMaps;
                 }
 

@@ -40,7 +40,7 @@ public static class MapManager
         if (_trackedMapIgnore.ContainsKey(guildId)
          && _trackedMapIgnore[guildId].Added.MinutesFromNow() >= Constants.GuildGameMinDuration)
         {
-            guildMapData.IgnoredMaps.Add(_trackedMapIgnore[guildId]);
+            TryAddIgnoredMap(guildId, _trackedMapIgnore[guildId]);
             await DataManager.SaveDbAsync(SaveType.GuildMaps);
         }
 
@@ -51,6 +51,7 @@ public static class MapManager
     {
         var ignoredMaps = await GetIgnoredMapsAsync(guildId);
 
+        
         StringBuilder sb = new StringBuilder();
         foreach (var map in ignoredMaps)
         {
@@ -84,9 +85,32 @@ public static class MapManager
         }
         
         mapName = mapName.FirstLetterUppercase();
+
+        if (maps.Exists(m => m.MapName == mapName))
+        {
+            return false;
+        }
+        
         maps.Add(mapName);
         await DataManager.SaveDbAsync(SaveType.GuildMaps);
         return true;
+    }
+
+    private static void TryAddIgnoredMap (ulong guildId, IgnoredSixesMap ignoredMap)
+    {
+        var guildMapData = _guildMapData.FirstOrDefault(gm => gm.GuildId == guildId);
+        if (guildMapData is not null)
+        {
+            if (guildMapData.IgnoredMaps.Contains(ignoredMap))
+            {
+                return;
+            }
+
+            guildMapData.IgnoredMaps.Add(ignoredMap);
+            _trackedMapIgnore[guildId] = new IgnoredSixesMap();
+            
+
+        }
     }
 
     public static async Task<bool> TryRemoveMapFromGuildMapsAsync (ulong guildId, string mapName)
