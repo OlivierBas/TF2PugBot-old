@@ -8,6 +8,9 @@ This bot can be used in multiple servers, but will struggle running multiple pug
 Update (Release v0.1)
 The bot now tracks games played for each player within every server as well as won spins. These stats can be seen with `/stats`. 
 
+Update (Release v0.4)
+The bot now allows for map spins and it seperates active and inactive maps off of the map pool.
+
 * [Commands](#commands)
   * [Basic](#basic)
   * [Management](#management)
@@ -22,13 +25,18 @@ The bot now tracks games played for each player within every server as well as w
 #### Basic
 * `/spinforcaptain`   = Spins for Team captain in the voice channel the user is currently in.
 * `/spinformedic`     = Spins for Medic in the voice channel the current user is if the configuration has set that channel to a team voice channel.
+* `/spinformap`       = Spins for map for the current game.
 * `/immunity get`     = Lists all Medic Immune players in the server
 * `/stats {user?}`    = Lists the stats for the current user or the specified user if one is specified.
+* `/mappool`          = Lists all the active and inactive maps in the map pool.
+* `/leaderboard {captains/medics/played}` = Leaderboard for the specified stat.
 
 #### Management
 * `/configure-admins {user}`                 = Sets the role allowed to configure the bot and use administrative commands.
 * `/configure-channels {blu/red} {channel}`  = Sets the BLU/RED channel to the specified channel, used for medic spins.
 * `/configure-pings {value}`                 = Enables or disables mention pings done by bot on a finished spin. 
+* `/configure-mappool {add/remove} {map}`    = Add a map or remove a map to/from the map pool.
+* `/configure-maptimeout {hours}`            = Change the amount of hours before a map gets back into the spin pool.
 
 #### Administration
 * `/immunity grant {user}` = Grants the user 12 hour med immunity
