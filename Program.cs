@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using TF2PugBot.Commands.Management;
+using TF2PugBot.Commands.Maps;
 using TF2PugBot.Commands.Modify;
 using TF2PugBot.Commands.Spin;
 using TF2PugBot.Commands.Stats;
@@ -12,8 +13,22 @@ namespace TF2PugBot;
 
 public class Program
 {
-    private DiscordSocketClient? _client;
+    private static DiscordSocketClient? _client;
     private static ulong? _devGuildId;
+
+    public static async Task<string> GetNameByUserIdAsync (ulong userId)
+    {
+        if (_client is not null)
+        {
+            var user = await _client.GetUserAsync(userId);
+            if (user is not null)
+            {
+                return user.Username;
+            }
+        }
+
+        return string.Empty;
+    }
 
     public static Task Main (string[] args)
     {
@@ -88,6 +103,10 @@ public class Program
         var medicSpinCommand = new SlashCommandBuilder()
                                .WithName("spinformedic")
                                .WithDescription("Spin for Medic (Be in Voice Channel)");
+        
+        var mapSpinCommand = new SlashCommandBuilder()
+                             .WithName("spinformap")
+                             .WithDescription("Spin for map");
 
         var getStatsCommand = new SlashCommandBuilder()
                               .WithName("stats")
@@ -153,6 +172,52 @@ public class Program
         modifyImmunityCommand.AddOption("get", ApplicationCommandOptionType.SubCommand,
                                         "Check all the medic immune players");
 
+        var configureMapPoolCommand = new SlashCommandBuilder()
+                                      .WithName("configure-mappool")
+                                      .WithDescription("Add or remove maps from the map pool.")
+                                      .AddOption(new SlashCommandOptionBuilder()
+                                                 .WithName("add")
+                                                 .WithDescription("Add map to map pool")
+                                                 .WithType(ApplicationCommandOptionType.SubCommand)
+                                                 .AddOption("value", ApplicationCommandOptionType.String,
+                                                            "The map to be added to the pool", isRequired: true))
+                                      .AddOption(new SlashCommandOptionBuilder()
+                                                 .WithName("remove")
+                                                 .WithDescription("Remove map from map pool")
+                                                 .WithType(ApplicationCommandOptionType.SubCommand)
+                                                 .AddOption("value", ApplicationCommandOptionType.String,
+                                                            "The map to be removed from the pool", isRequired: true));
+
+        var configureMapTimeOutCommand = new SlashCommandBuilder()
+                                         .WithName("configure-maptimeout")
+                                         .WithDescription(
+                                             "Change the amount of hours that need to pass for a map to be played again")
+                                         .AddOption("hours", ApplicationCommandOptionType.Integer,
+                                                    "Hours needed to pass for map to be played again (Default: 2)",
+                                                    isRequired: true);
+
+        var getMapPoolCommand = new SlashCommandBuilder()
+                                .WithName("mappool")
+                                .WithDescription("Get the current map pool");
+
+        var getLeaderboardCommand = new SlashCommandBuilder()
+                                    .WithName("leaderboard")
+                                    .WithDescription("Get player rankings")
+                                    .AddOption(new SlashCommandOptionBuilder()
+                                               .WithName("captains")
+                                               .WithDescription("Top captain spins won")
+                                               .WithType(ApplicationCommandOptionType.SubCommand))
+                                    .AddOption(new SlashCommandOptionBuilder()
+                                               .WithName("medics")
+                                               .WithDescription("Medic spins win")
+                                               .WithType(ApplicationCommandOptionType.SubCommand))
+                                    .AddOption(new SlashCommandOptionBuilder()
+                                               .WithName("played")
+                                               .WithDescription("Most games played")
+                                               .WithType(ApplicationCommandOptionType.SubCommand));
+            
+
+
         try
         {
             await CommandCreator.CreateCommandAsync(devGuild, captainSpinCommand.Build(), CommandNames.CaptainSpin);
@@ -165,14 +230,29 @@ public class Program
                                                     CommandNames.ModifyMedicImmunity);
             await CommandCreator.CreateCommandAsync(devGuild, getStatsCommand.Build(), CommandNames.GetStats);
             await CommandCreator.CreateCommandAsync(devGuild, setPingUsersCommand.Build(), CommandNames.SetPings);
+            await CommandCreator.CreateCommandAsync(devGuild, configureMapTimeOutCommand.Build(),
+                                                    CommandNames.ConfigureMapTimeOut);
+            await CommandCreator.CreateCommandAsync(devGuild, configureMapPoolCommand.Build(),
+                                                    CommandNames.ConfigureMapPool);
+            await CommandCreator.CreateCommandAsync(devGuild, mapSpinCommand.Build(),
+                                                    CommandNames.MapSpin);
+            await CommandCreator.CreateCommandAsync(devGuild, getMapPoolCommand.Build(),
+                                                    CommandNames.GetMapPool);
+            await CommandCreator.CreateCommandAsync(devGuild, getLeaderboardCommand.Build(),
+                                                    CommandNames.GetLeaderboard);
 
-            /*await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(medicSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(setTeamChannelCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(setManagementRoleCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(modifyImmunityCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(getStatsCommand.Build());
-            await _client.CreateGlobalApplicationCommandAsync(setPingUsersCommand.Build());*/
+            await _client.CreateGlobalApplicationCommandAsync(setPingUsersCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(configureMapTimeOutCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(configureMapPoolCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(mapSpinCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(getMapPoolCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(getLeaderboardCommand.Build());
         }
         catch (Exception ex)
         {
@@ -181,7 +261,7 @@ public class Program
 
         foreach (var joinedGuild in _client.Guilds)
         {
-            await DataManager.InitializeGuildDataAsync(joinedGuild);
+            await GuildManager.InitializeGuildDataAsync(joinedGuild);
         }
 
         Console.WriteLine($"Bot is running in {_client.Guilds.Count} guilds!");
@@ -226,33 +306,58 @@ public class Program
                 case CommandNames.GetStats:
                     await new GetStatsCommand().PerformAsync(command, caller);
                     break;
+                case CommandNames.ConfigureMapPool:
+                    await new ConfigureMapPoolCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.ConfigureMapTimeOut:
+                    await new ConfigureMapTimeoutCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.MapSpin:
+                    await new SpinMapCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.GetMapPool:
+                    await new GetMapPoolCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.GetLeaderboard:
+                    await new GetLeaderboardCommand().PerformAsync(command, caller);
+                    break;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.Message + ex.StackTrace);
         }
     }
 
     private async Task Client_JoinedGuild (SocketGuild guild)
     {
-        await DataManager.InitializeGuildDataAsync(guild);
+        await GuildManager.InitializeGuildDataAsync(guild);
     }
 
     private async Task Client_UserStateChanged (SocketUser user, SocketVoiceState previousState,
                                                 SocketVoiceState newState)
     {
-        ulong guildId   = previousState.VoiceChannel.Guild.Id;
-        if (!DataManager.GuildGameHasEnded(guildId))
+        ulong guildId = previousState.VoiceChannel.Guild.Id;
+        if (!GuildManager.GuildGameHasEnded(guildId))
         {
-            if (DataManager.GetGuildTeamChannel(guildId, newState.VoiceChannel.Id) != null)
+            if (GuildManager.TryGetGuildTeamChannel(guildId, newState.VoiceChannel.Id, out Team? teamChannel))
             {
-                DataManager.AddPlayerToGuildGame(guildId, user.Id);
+                if (GuildManager.TryGetGuildTeamChannel(guildId, previousState.VoiceChannel.Id, out Team? teamchannel))
+                {
+                    // Just leave if the user joins a different team channel.
+                    return;
+                }
+                Console.WriteLine($"Game has started and {user.Username} joined {teamChannel.ToString()}");
+                GuildManager.AddPlayerToGuildGame(guildId, user.Id);
             }
             else
             {
-                DataManager.RemovePlayerFromGuildGame(guildId, user.Id);
+                GuildManager.RemovePlayerFromGuildGame(guildId, user.Id);
             }
+        }
+        else
+        {
+            await GuildManager.EnsureGuildGameEnded(guildId);
         }
     }
 }

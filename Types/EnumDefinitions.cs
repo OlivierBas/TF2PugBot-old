@@ -5,11 +5,16 @@ public enum CommandNames
     NotFound,
     CaptainSpin,
     MedicSpin,
+    MapSpin,
     SetTeamChannel,
     SetAdminRole,
     SetPings,
     ModifyMedicImmunity,
     GetStats,
+    GetMapPool,
+    ConfigureMapPool,
+    ConfigureMapTimeOut,
+    GetLeaderboard
 }
 
 public enum SpinMode
@@ -29,4 +34,12 @@ public enum StatTypes
     GamesPlayed,
     CaptainSpinsWon,
     MedicSpinsWon,
+}
+
+public enum SaveType
+{
+    MedImmunities,
+    PlayerStats,
+    GuildData,
+    GuildMaps
 }

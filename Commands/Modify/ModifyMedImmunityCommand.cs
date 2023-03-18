@@ -16,13 +16,13 @@ public class ModifyMedImmunityCommand : ICommand
         {
             EmbedBuilder embedBuilder = new EmbedBuilder();
             embedBuilder.WithTitle("Current Medic Immune Players");
-            embedBuilder.WithDescription(await DataManager.GetMedImmunePlayerStringAsync(command.GuildId));
+            embedBuilder.WithDescription(await MedManager.GetMedImmunePlayerStringAsync(command.GuildId));
 
             await command.RespondAsync(embed: embedBuilder.Build());
             return;
         }
 
-        if (DataManager.HasAccessToCommand(command.GuildId, caller))
+        if (GuildManager.HasAccessToCommand(command.GuildId, caller))
         {
             var argUser = command.Data.Options.First().Options.First().Value;
 
@@ -31,8 +31,8 @@ public class ModifyMedImmunityCommand : ICommand
                 SocketGuildUser user = (SocketGuildUser)argUser;
                 if (option == "grant")
                 {
-                    await DataManager.ForceAddMedImmunePlayerAsync(user);
-                    if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
+                    await MedManager.ForceAddMedImmunePlayerAsync(user);
+                    if (GuildManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
                     {
                         await command.RespondAsync($"<@!{user.Id}> has been granted medic immunity for 12 hours");
                     }
@@ -46,8 +46,8 @@ public class ModifyMedImmunityCommand : ICommand
 
                 if (option == "revoke")
                 {
-                    await DataManager.ForceRemoveMedImmunePlayerAsync(user);
-                    if (DataManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
+                    await MedManager.ForceRemoveMedImmunePlayerAsync(user);
+                    if (GuildManager.GuildHasPingsEnabled(command.GuildId.GetValueOrDefault()))
                     {
                         await command.RespondAsync($"<@!{user.Id}> has been revoked medic immunity");
                     }

@@ -3,5 +3,5 @@
 public class Constants
 {
     public const int MedImmunityClearHours = 12;
-    public const int GuildGameMinDuration = 10;
+    public const int GuildGameMinDuration = 20;
 }

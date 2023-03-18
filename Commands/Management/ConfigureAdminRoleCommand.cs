@@ -9,14 +9,14 @@ public class ConfigureAdminRoleCommand : ICommand
     /// <inheritdoc />
     public async Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller)
     {
-        if (DataManager.HasAccessToCommand(command.GuildId, caller))
+        if (GuildManager.HasAccessToCommand(command.GuildId, caller))
         {
             var argRole = command.Data.Options.First().Value;
 
             try
             {
                 SocketRole role    = (SocketRole )argRole;
-                await DataManager.SetGuildAdminRoleAsync(command.GuildId.GetValueOrDefault(), role);
+                await GuildManager.SetGuildAdminRoleAsync(command.GuildId.GetValueOrDefault(), role);
                 
                 await command.RespondAsync($"Successfully set `{role.Name}` to the bot management role.", ephemeral: true);
                 return;

@@ -19,7 +19,7 @@ public class GetStatsCommand : ICommand
             if (argsUser is null
              || argsUser.Count == 0)
             {
-                var psg = DataManager.GetPlayerGuildStats(caller.Id, command.GuildId.GetValueOrDefault());
+                var psg = StatsManager.GetPlayerGuildStats(caller.Id, command.GuildId.GetValueOrDefault());
                 BuildTexts(embedBuilder, stringBuilder, psg, caller);
 
                 await command.RespondAsync(embed: embedBuilder.Build());
@@ -29,7 +29,7 @@ public class GetStatsCommand : ICommand
                 try
                 {
                     SocketGuildUser user = (SocketGuildUser)argsUser.First().Value;
-                    var             psg = DataManager.GetPlayerGuildStats(user.Id, command.GuildId.GetValueOrDefault());
+                    var             psg = StatsManager.GetPlayerGuildStats(user.Id, command.GuildId.GetValueOrDefault());
                     BuildTexts(embedBuilder, stringBuilder, psg, user);
 
                     await command.RespondAsync(embed: embedBuilder.Build());

@@ -2,9 +2,15 @@
 
 namespace TF2PugBot.Data;
 
-public static partial class DataManager
+public static class StatsManager
 {
     private static List<PlayerStats> _playerStats = new List<PlayerStats>();
+
+    public static List<PlayerStats> PlayerStats
+    {
+        get => _playerStats;
+        set => _playerStats = value;
+    }
 
     private static PlayerStats? GetPlayerStats (ulong userId)
     {
@@ -17,10 +23,14 @@ public static partial class DataManager
 
         return ps;
     }
-
+    
+    public static List<PlayerStats> GetPlayerStatsOfGuild (ulong guildId)
+    {
+        return _playerStats.Where(ps => ps?.GuildStats.FirstOrDefault(psg => psg.GuildId == guildId) is not null).ToList();
+    }
+    
     public static PlayerGuildStats? GetPlayerGuildStats (ulong userId, ulong guildId)
     {
-
         PlayerStats?      ps  = GetPlayerStats(userId);
         PlayerGuildStats? psg = ps?.GuildStats.FirstOrDefault(g => g.GuildId == guildId);
         if (psg is null)
@@ -68,26 +78,30 @@ public static partial class DataManager
         }
     }
 
-    public static async Task UpdatePlayerStatsAsync (ulong userId, ulong guildId, StatTypes stat)
+    public static async Task UpdatePlayerStatsAsync (ulong guildId, StatTypes stat, params ulong[] userIds)
     {
-        var ps = GetPlayerGuildStats(userId, guildId);
-        if (ps is not null)
+        foreach (var userId in userIds)
         {
-            switch (stat)
+            var psg = GetPlayerGuildStats(userId, guildId);
+            Console.WriteLine($"Increasing {userId}'s {stat} in {guildId}");
+            if (psg is not null)
             {
-                case StatTypes.GamesPlayed:
-                    ps.GamesPlayed++;
-                    ps.LastPlayed = DateTime.Now;
-                    break;
-                case StatTypes.CaptainSpinsWon:
-                    ps.WonCaptainSpins++;
-                    break;
-                case StatTypes.MedicSpinsWon:
-                    ps.WonMedicSpins++;
-                    break;
+                switch (stat)
+                {
+                    case StatTypes.GamesPlayed:
+                        psg.GamesPlayed++;
+                        psg.LastPlayed = DateTime.Now;
+                        break;
+                    case StatTypes.CaptainSpinsWon:
+                        psg.WonCaptainSpins++;
+                        break;
+                    case StatTypes.MedicSpinsWon:
+                        psg.WonMedicSpins++;
+                        break;
+                }
             }
 
-            await SaveDbAsync();
+            await DataManager.SaveDbAsync(SaveType.PlayerStats);
         }
     }
 }

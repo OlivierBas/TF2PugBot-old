@@ -3,22 +3,21 @@ using TF2PugBot.Data;
 
 namespace TF2PugBot.Commands.Management;
 
-public class ConfigurePingsCommand : ICommand
+public class ConfigureMapTimeoutCommand : ICommand
 {
     /// <inheritdoc />
     public async Task PerformAsync (SocketSlashCommand command, SocketGuildUser caller)
     {
         if (GuildManager.HasAccessToCommand(command.GuildId, caller))
         {
-            var argBool = command.Data.Options.First().Value;
+            var argValue = command.Data.Options.First().Value;
 
             try
             {
-                bool value = (bool )argBool;
-                await GuildManager.SetGuildPingsAsync(command.GuildId, value);
+                int hours = (int )argValue;
+                await MapManager.UpdateMapTimeout(command.GuildId.GetValueOrDefault(), hours);
                 
-                string action = value ? "enabled" : "disabled";
-                await command.RespondAsync($"Successfully `{action}` pings", ephemeral: true);
+                await command.RespondAsync($"Successfully set map timeout to `{hours}` hours", ephemeral: true);
                 return;
 
             }
