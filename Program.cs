@@ -13,8 +13,22 @@ namespace TF2PugBot;
 
 public class Program
 {
-    private DiscordSocketClient? _client;
+    private static DiscordSocketClient? _client;
     private static ulong? _devGuildId;
+
+    public static async Task<string> GetNameByUserIdAsync (ulong userId)
+    {
+        if (_client is not null)
+        {
+            var user = await _client.GetUserAsync(userId);
+            if (user is not null)
+            {
+                return user.Username;
+            }
+        }
+
+        return string.Empty;
+    }
 
     public static Task Main (string[] args)
     {
@@ -186,6 +200,22 @@ public class Program
                                 .WithName("mappool")
                                 .WithDescription("Get the current map pool");
 
+        var getLeaderboardCommand = new SlashCommandBuilder()
+                                    .WithName("leaderboard")
+                                    .WithDescription("Get player rankings")
+                                    .AddOption(new SlashCommandOptionBuilder()
+                                               .WithName("captains")
+                                               .WithDescription("Top captain spins won")
+                                               .WithType(ApplicationCommandOptionType.SubCommand))
+                                    .AddOption(new SlashCommandOptionBuilder()
+                                               .WithName("medics")
+                                               .WithDescription("Medic spins win")
+                                               .WithType(ApplicationCommandOptionType.SubCommand))
+                                    .AddOption(new SlashCommandOptionBuilder()
+                                               .WithName("played")
+                                               .WithDescription("Most games played")
+                                               .WithType(ApplicationCommandOptionType.SubCommand));
+            
 
 
         try
@@ -208,6 +238,8 @@ public class Program
                                                     CommandNames.MapSpin);
             await CommandCreator.CreateCommandAsync(devGuild, getMapPoolCommand.Build(),
                                                     CommandNames.GetMapPool);
+            await CommandCreator.CreateCommandAsync(devGuild, getLeaderboardCommand.Build(),
+                                                    CommandNames.GetLeaderboard);
 
             await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(medicSpinCommand.Build());
@@ -220,6 +252,7 @@ public class Program
             await _client.CreateGlobalApplicationCommandAsync(configureMapPoolCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(mapSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(getMapPoolCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(getLeaderboardCommand.Build());
         }
         catch (Exception ex)
         {
@@ -284,6 +317,9 @@ public class Program
                     break;
                 case CommandNames.GetMapPool:
                     await new GetMapPoolCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.GetLeaderboard:
+                    await new GetLeaderboardCommand().PerformAsync(command, caller);
                     break;
             }
         }

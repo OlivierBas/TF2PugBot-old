@@ -13,7 +13,8 @@ public enum CommandNames
     GetStats,
     GetMapPool,
     ConfigureMapPool,
-    ConfigureMapTimeOut
+    ConfigureMapTimeOut,
+    GetLeaderboard
 }
 
 public enum SpinMode

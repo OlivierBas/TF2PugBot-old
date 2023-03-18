@@ -23,7 +23,12 @@ public static class StatsManager
 
         return ps;
     }
-
+    
+    public static List<PlayerStats> GetPlayerStatsOfGuild (ulong guildId)
+    {
+        return _playerStats.Where(ps => ps?.GuildStats.FirstOrDefault(psg => psg.GuildId == guildId) is not null).ToList();
+    }
+    
     public static PlayerGuildStats? GetPlayerGuildStats (ulong userId, ulong guildId)
     {
         PlayerStats?      ps  = GetPlayerStats(userId);
