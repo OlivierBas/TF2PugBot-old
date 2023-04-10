@@ -22,7 +22,9 @@ public class RollTeamsCommand : ICommand
                 return;
             }
 
-            ulong guildId = command.GuildId.GetValueOrDefault();
+            ulong guildId        = command.GuildId.GetValueOrDefault();
+            bool  includeClasses = GuildManager.GuildIsHLMode(guildId);
+            bool  mentionUsers   = GuildManager.GuildHasPingsEnabled(guildId);
 
             EmbedBuilder  embedBuilder = new EmbedBuilder();
             StringBuilder sb           = new StringBuilder();
@@ -59,21 +61,13 @@ public class RollTeamsCommand : ICommand
                 if (winners.Item1.Length >= 6
                  && winners.Item2.Length >= 6)
                 {
-                    sb.Clear(); // use same builder for BLU team.
-                    foreach (var bluPlayer in winners.Item2)
-                    {
-                        sb.AppendLine($"{bluPlayer.DisplayName}");
-                    }
-
+                    sb.Clear();                                                // use same builder for BLU team.
+                    BuildTeamString(sb, winners.Item2, Team.BLU, mentionUsers, includeClasses); // Item 2 = BLU
                     embedBuilder.AddField("BLU Team:", sb.ToString(), true);
-                    
-                    sb.Clear(); // use same builder for RED team.
-                    foreach (var redPlayer in winners.Item1)
-                    {
-                        sb.AppendLine($"{redPlayer.DisplayName}");
-                    }
-                    embedBuilder.AddField("RED Team:", sb.ToString(), true);
 
+                    sb.Clear();                                                // use same builder for RED team.
+                    BuildTeamString(sb, winners.Item1, Team.RED, mentionUsers, includeClasses); // Item 1 = RED
+                    embedBuilder.AddField("RED Team:", sb.ToString(), true);
 
 
                     var players = winners.Item1.Concat(winners.Item2).ToList();
@@ -95,6 +89,40 @@ public class RollTeamsCommand : ICommand
         await command.RespondAsync("You are not in a voice channel with other players!", ephemeral: true);
     }
 
+    private void BuildTeamString (StringBuilder stringBuilder, SocketGuildUser[] players, Team team,
+                                  bool mentionUsers = true, bool includeClasses = false)
+    {
+        for (int i = 0; i < players.Length; i++)
+        {
+            var    player     = players[i];
+            string playerName = mentionUsers ? $"<@!{player.Id}>" : $"{player.DisplayName}";
+
+            if (includeClasses)
+            {
+                string rolledClass = i switch
+                {
+                    0 => "**Scout**",
+                    1 => "**Soldier**",
+                    2 => "**Pyro**",
+                    4 => "**Demoman**",
+                    5 => "**Heavy**",
+                    6 => "**Engineer**",
+                    7 => "**Medic**",
+                    8 => "**Sniper**",
+                    9 => "**Spy**",
+                    _ => "Something went wrong :)"
+                };
+                if (i > 9) continue; // ???
+                if (i == 7)
+                    MedManager.PrepareTempMedImmunity(
+                        player, team); // Grant temp med immunity if player got picked as med.
+                stringBuilder.Append(rolledClass + ": ");
+            }
+
+            stringBuilder.Append($"{playerName} \n");
+        }
+    }
+
     private (SocketGuildUser[], SocketGuildUser[]) RollRandomTeams (ulong guildId,
                                                                     IReadOnlyCollection<SocketGuildUser> users,
                                                                     int playersInVoice)
@@ -107,7 +135,7 @@ public class RollTeamsCommand : ICommand
         {
             maxTeamPlayers = 18;
         }
-        
+
 
         var shuffled = users.OrderBy(u => rng.Next()).Take(maxTeamPlayers).ToList();
 
