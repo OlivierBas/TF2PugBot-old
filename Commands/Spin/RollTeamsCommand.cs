@@ -16,15 +16,30 @@ public class RollTeamsCommand : ICommand
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
             int playersInVoice = connectedUsers.Count;
-            if (playersInVoice < 12)
+            
+            ulong guildId        = command.GuildId.GetValueOrDefault();
+            bool  isHL = GuildManager.GuildIsHLMode(guildId);
+            bool  mentionUsers   = GuildManager.GuildHasPingsEnabled(guildId);
+            
+            
+            if (isHL)
+            {
+                if (playersInVoice < 18)
+                {
+                    await command.RespondAsync("Roll requires atleast 18 players in HL Mode, ignoring",
+                                               ephemeral: true);
+                }
+
+                return;
+            }
+            else if (playersInVoice < 12)
             {
                 await command.RespondAsync("Roll requires atleast 12 players, ignoring.", ephemeral: true);
                 return;
             }
 
-            ulong guildId        = command.GuildId.GetValueOrDefault();
-            bool  includeClasses = GuildManager.GuildIsHLMode(guildId);
-            bool  mentionUsers   = GuildManager.GuildHasPingsEnabled(guildId);
+
+
 
             EmbedBuilder  embedBuilder = new EmbedBuilder();
             StringBuilder sb           = new StringBuilder();
@@ -62,11 +77,11 @@ public class RollTeamsCommand : ICommand
                  && winners.Item2.Length >= 6)
                 {
                     sb.Clear();                                                // use same builder for BLU team.
-                    BuildTeamString(sb, winners.Item2, Team.BLU, mentionUsers, includeClasses); // Item 2 = BLU
+                    BuildTeamString(sb, winners.Item2, Team.BLU, mentionUsers, isHL); // Item 2 = BLU
                     embedBuilder.AddField("BLU Team:", sb.ToString(), true);
 
                     sb.Clear();                                                // use same builder for RED team.
-                    BuildTeamString(sb, winners.Item1, Team.RED, mentionUsers, includeClasses); // Item 1 = RED
+                    BuildTeamString(sb, winners.Item1, Team.RED, mentionUsers, isHL); // Item 1 = RED
                     embedBuilder.AddField("RED Team:", sb.ToString(), true);
 
 
