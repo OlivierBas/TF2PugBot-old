@@ -15,9 +15,9 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
         {
             var connectedUsers = caller.VoiceChannel.ConnectedUsers;
             int playersInVoice = connectedUsers.Count;
-            if (playersInVoice < 6)
+            if (playersInVoice < 3)
             {
-                await command.RespondAsync("Spin requires 6 players, ignoring.", ephemeral: true);
+                await command.RespondAsync("Spin requires 3 players, ignoring.", ephemeral: true);
                 return;
             }
 
