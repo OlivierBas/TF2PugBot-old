@@ -30,6 +30,7 @@ public static class MapManager
 
     public static async Task<List<IgnoredSixesMap>> GetIgnoredMapsAsync (ulong guildId)
     {
+
         var guildMapData = _guildMapData.FirstOrDefault(g => g.GuildId == guildId);
         if (guildMapData is null)
         {
@@ -43,12 +44,13 @@ public static class MapManager
             TryAddIgnoredMap(guildId, _trackedMapIgnore[guildId]);
             await DataManager.SaveDbAsync(SaveType.GuildMaps);
         }
-
+        await ClearIgnoredMapsAsync(guildId);
         return guildMapData.IgnoredMaps;
     }
 
     public static async Task<string> GetIgnoredMapsAsStringAsync (ulong guildId)
     {
+        await ClearIgnoredMapsAsync(guildId);
         var ignoredMaps = await GetIgnoredMapsAsync(guildId);
 
         

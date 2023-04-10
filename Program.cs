@@ -216,6 +216,9 @@ public class Program
                                                .WithDescription("Most games played")
                                                .WithType(ApplicationCommandOptionType.SubCommand));
             
+        var rollTeamsCommand = new SlashCommandBuilder()
+                                .WithName("rollforteams")
+                                .WithDescription("Rolls two 6v6 teams (Must be in voice channel)");
 
 
         try
@@ -240,6 +243,8 @@ public class Program
                                                     CommandNames.GetMapPool);
             await CommandCreator.CreateCommandAsync(devGuild, getLeaderboardCommand.Build(),
                                                     CommandNames.GetLeaderboard);
+            await CommandCreator.CreateCommandAsync(devGuild, rollTeamsCommand.Build(),
+                                                    CommandNames.RollTeamsCommand);
 
             await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(medicSpinCommand.Build());
@@ -253,6 +258,7 @@ public class Program
             await _client.CreateGlobalApplicationCommandAsync(mapSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(getMapPoolCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(getLeaderboardCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(rollTeamsCommand.Build());
         }
         catch (Exception ex)
         {
@@ -320,6 +326,9 @@ public class Program
                     break;
                 case CommandNames.GetLeaderboard:
                     await new GetLeaderboardCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.RollTeamsCommand:
+                    await new RollTeamsCommand().PerformAsync(command, caller);
                     break;
             }
         }
