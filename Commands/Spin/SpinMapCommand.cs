@@ -18,7 +18,7 @@ public class SpinMapCommand : BaseSpinCommand, ICommand
             ulong guildId = gid.GetValueOrDefault();
             if (!GuildManager.GuildGameHasEnded(guildId))
             {
-                await MapManager.ClearIgnoredMapsAsync(guildId);
+                
                 EmbedBuilder embedBuilder = new EmbedBuilder();
                 embedBuilder.WithTitle("Spinning for map");
                 embedBuilder.WithColor(Color.Red);
@@ -49,4 +49,5 @@ public class SpinMapCommand : BaseSpinCommand, ICommand
 
         await command.RespondAsync("Something went HORRIBLY wrong! :)", ephemeral: true);
     }
+    
 }
