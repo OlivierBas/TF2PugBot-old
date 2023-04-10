@@ -70,7 +70,7 @@ public static class GuildManager
             _trackedGuildGame[guildId] = new GuildGameData();
         }
 
-        Console.WriteLine($"Guild game started for guild {guildId}");
+        Console.WriteLine($"({guildId}) Guild game started");
     }
 
     public static void StartNewGuildGame (ulong guildId, List<SocketGuildUser> players)
@@ -89,7 +89,7 @@ public static class GuildManager
             };
         }
 
-        Console.WriteLine($"Guild game started for guild {guildId} with {players.Count} players");
+        Console.WriteLine($"({guildId}) Guild game started with {players.Count} players");
     }
 
     public static bool GuildGameHasEnded (ulong guildId)
@@ -112,7 +112,7 @@ public static class GuildManager
             var guildGame = _trackedGuildGame[guildId];
             if (guildGame.StartDate.HoursFromNow() >= 2) // If 2 hours have passed, just end the game.
             {
-                Console.WriteLine($"Two hours passed, forcefully ending guild game for {guildId}.");
+                Console.WriteLine($"({guildId}) Two hours passed, forcefully ending guild game.");
                 await TryEndGuildGame(guildId);
             }
         }
@@ -127,13 +127,12 @@ public static class GuildManager
             {
                 if (guildGame.Players.Count == 0)
                 {
-                    Console.WriteLine($"Something went wrong, guild game {guildId} had 0 players");
+                    Console.WriteLine($"({guildId}) Something went wrong, game had 0 players");
                 }
 
                 foreach (var player in guildGame.Players)
                 {
                     await StatsManager.UpdatePlayerStatsAsync(guildId, StatTypes.GamesPlayed, player);
-                    Console.WriteLine($"user {player}, Increased Games Played");
                 }
 
                 _trackedGuildGame[guildId] = new GuildGameData(); // reset the tracked guild game.
@@ -164,10 +163,8 @@ public static class GuildManager
     {
         if (_trackedGuildGame.ContainsKey(guildId))
         {
-            Console.WriteLine($"Guild game has: {_trackedGuildGame[guildId].Players.Count} players.");
             if (!_trackedGuildGame[guildId].LockPlayers)
             {
-                Console.WriteLine($"And now adding {userId} to count.");
                 _trackedGuildGame[guildId].Players.Add(userId);
             }
         }
@@ -182,10 +179,8 @@ public static class GuildManager
     {
         if (!_trackedGuildGame.ContainsKey(guildId))
         {
-            Console.WriteLine($"Guild game has: {_trackedGuildGame[guildId].Players.Count} players.");
             if (!_trackedGuildGame[guildId].LockPlayers)
             {
-                Console.WriteLine($"And now removing {userId} from count.");
                 _trackedGuildGame[guildId].Players.Remove(userId);
             }
         }

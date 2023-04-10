@@ -83,7 +83,7 @@ public static class StatsManager
         foreach (var userId in userIds)
         {
             var psg = GetPlayerGuildStats(userId, guildId);
-            Console.WriteLine($"Increasing {userId}'s {stat} in {guildId}");
+            Console.WriteLine($"({guildId}) Increasing {userId}'s {stat}");
             if (psg is not null)
             {
                 switch (stat)

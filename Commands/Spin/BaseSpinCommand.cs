@@ -171,7 +171,6 @@ public abstract class BaseSpinCommand
 
                 sb.Clear();
 
-                Console.WriteLine($"iteration {i} / {roll} ");
             }
         }
 

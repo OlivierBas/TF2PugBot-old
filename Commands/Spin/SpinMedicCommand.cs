@@ -57,7 +57,7 @@ public class SpinMedicCommand : BaseSpinCommand, ICommand
             {
                 if (GuildManager.GuildGameHasEnded(guildId))
                 {
-                    Console.WriteLine("smix attempted (we believe atleast), close the previous game and start smix game");
+                    Console.WriteLine($"({guildId}, {caller.Guild.Name}) SMix attempted (we believe atleast), closing previous game and starting SMix");
                     await GuildManager.TryEndGuildGame(guildId);
                     GuildManager.StartNewGuildGame(guildId, connectedUsers.ToList());
                 }
