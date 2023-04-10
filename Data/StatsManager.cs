@@ -23,12 +23,13 @@ public static class StatsManager
 
         return ps;
     }
-    
+
     public static List<PlayerStats> GetPlayerStatsOfGuild (ulong guildId)
     {
-        return _playerStats.Where(ps => ps?.GuildStats.FirstOrDefault(psg => psg.GuildId == guildId) is not null).ToList();
+        return _playerStats.Where(ps => ps?.GuildStats.FirstOrDefault(psg => psg.GuildId == guildId) is not null)
+                           .ToList();
     }
-    
+
     public static PlayerGuildStats? GetPlayerGuildStats (ulong userId, ulong guildId)
     {
         PlayerStats?      ps  = GetPlayerStats(userId);
@@ -67,14 +68,18 @@ public static class StatsManager
         else
         {
             var ps = _playerStats.FirstOrDefault(p => p.UserId == userId);
-            ps!.GuildStats = new List<PlayerGuildStats>()
+            if (ps.GuildStats.Count == 0)
             {
-                new PlayerGuildStats()
+                ps.GuildStats = new List<PlayerGuildStats>();
+            }
+            else
+            {
+                ps.GuildStats.Add(new PlayerGuildStats()
                 {
                     GuildId    = guildId.GetValueOrDefault(),
                     LastPlayed = DateTime.Now
-                },
-            };
+                });
+            }
         }
     }
 
