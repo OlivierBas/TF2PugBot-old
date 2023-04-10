@@ -89,6 +89,7 @@ public class RollTeamsCommand : ICommand
                     GuildManager.StartNewGuildGame(guildId, players);
 
                     await command.RespondAsync(embed: embedBuilder.Build());
+                    return;
                 }
 
                 await command.RespondAsync("Team roll failed, wrong amount of players?",
