@@ -72,14 +72,13 @@ public static class StatsManager
             {
                 ps.GuildStats = new List<PlayerGuildStats>();
             }
-            else
+
+            ps.GuildStats.Add(new PlayerGuildStats()
             {
-                ps.GuildStats.Add(new PlayerGuildStats()
-                {
-                    GuildId    = guildId.GetValueOrDefault(),
-                    LastPlayed = DateTime.Now
-                });
-            }
+                GuildId    = guildId.GetValueOrDefault(),
+                LastPlayed = DateTime.Now
+            });
+            
         }
     }
 
