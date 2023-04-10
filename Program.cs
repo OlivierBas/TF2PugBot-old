@@ -361,23 +361,20 @@ public class Program
         ulong guildId = previousState.VoiceChannel.Guild.Id;
         if (!GuildManager.GuildGameHasEnded(guildId))
         {
-            Console.WriteLine($"({newState.VoiceChannel.Guild.Name}) has started a game with {newState.VoiceChannel.ConnectedUsers.Count} players.");
-
             if (GuildManager.TryGetGuildTeamChannel(guildId, newState.VoiceChannel.Id, out Team? teamChannel))
             {
 
                 if (GuildManager.TryGetGuildTeamChannel(guildId, previousState.VoiceChannel.Id, out Team? sameChannel))
                 {
-                    // Just leave if the user joins a different team channel.
+                    // Just return if the user joins a different team channel. (already accounted for in the team game)
                     return;
                 }
-
-                Console.WriteLine($"$({guildId}) and {user.Username} joined {teamChannel.ToString()}");
+                Console.Write($"({guildId}, {newState.VoiceChannel.Guild.Name})");
                 GuildManager.AddPlayerToGuildGame(guildId, user.Id);
             }
             else
             {
-                Console.WriteLine($"$({guildId}) and {user.Username} left {teamChannel.ToString()}");
+                Console.Write($"({guildId}, {newState.VoiceChannel.Guild.Name})");
                 GuildManager.RemovePlayerFromGuildGame(guildId, user.Id);
             }
         }

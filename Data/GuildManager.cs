@@ -165,6 +165,8 @@ public static class GuildManager
         {
             if (!_trackedGuildGame[guildId].LockPlayers)
             {
+                Console.Write($" has an ongoing game with {_trackedGuildGame[guildId].Players.Count} players");
+                Console.Write($" and now adding {userId} \n");
                 _trackedGuildGame[guildId].Players.Add(userId);
             }
         }
@@ -181,6 +183,8 @@ public static class GuildManager
         {
             if (!_trackedGuildGame[guildId].LockPlayers)
             {
+                Console.Write($" has an ongoing game with {_trackedGuildGame[guildId].Players.Count} players");
+                Console.Write($" and now removing {userId} \n");
                 _trackedGuildGame[guildId].Players.Remove(userId);
             }
         }
