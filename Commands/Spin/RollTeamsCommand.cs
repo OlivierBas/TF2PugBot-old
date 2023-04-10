@@ -101,12 +101,18 @@ public class RollTeamsCommand : ICommand
     {
         Random rng = new Random();
 
+        int maxTeamPlayers = 12;
 
+        if (GuildManager.GuildIsHLMode(guildId))
+        {
+            maxTeamPlayers = 18;
+        }
+        
 
-        var shuffled = users.OrderBy(u => rng.Next()).Take(playersInVoice).ToList();
+        var shuffled = users.OrderBy(u => rng.Next()).Take(maxTeamPlayers).ToList();
 
-        bool[] picked = Enumerable.Repeat(true, playersInVoice / 2)
-                                  .Concat(Enumerable.Repeat(false, playersInVoice - playersInVoice / 2))
+        bool[] picked = Enumerable.Repeat(true, maxTeamPlayers / 2)
+                                  .Concat(Enumerable.Repeat(false, maxTeamPlayers - maxTeamPlayers / 2))
                                   .OrderBy(_ => rng).ToArray();
         SocketGuildUser[] red = shuffled.Where((u, i) => picked[i]).ToArray();
         SocketGuildUser[] blu = shuffled.Where((u, i) => !picked[i]).ToArray();

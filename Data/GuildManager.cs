@@ -243,6 +243,17 @@ public static class GuildManager
         return false;
     }
 
+    public static bool GuildIsHLMode (ulong guildId)
+    {
+        var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildData is not null)
+        {
+            return guildData.HLMode;
+        }
+
+        return false;
+    }
+
     public static async Task SetGuildAdminRoleAsync (ulong? guildId, SocketRole role)
     {
         var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
