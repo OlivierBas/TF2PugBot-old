@@ -15,7 +15,8 @@ public enum CommandNames
     ConfigureMapPool,
     ConfigureMapTimeOut,
     GetLeaderboard,
-    RollTeamsCommand
+    RollTeamsCommand,
+    SetHLMode
 }
 
 public enum SpinMode

@@ -119,6 +119,12 @@ public class Program
                                   .WithDescription("Enable or disable user mentions after a won spin")
                                   .AddOption("value", ApplicationCommandOptionType.Boolean,
                                              "Whether to ping users when they have won a roll");
+        
+        var setHLModeCommand = new SlashCommandBuilder()
+                                  .WithName("configure-hl")
+                                  .WithDescription("Enable or disable HL Mode for team spins")
+                                  .AddOption("value", ApplicationCommandOptionType.Boolean,
+                                             "Whether to enable or disable HL mode, changing team spins to include classes.");
 
 
         var setTeamChannelCommand = new SlashCommandBuilder()
@@ -245,6 +251,8 @@ public class Program
                                                     CommandNames.GetLeaderboard);
             await CommandCreator.CreateCommandAsync(devGuild, rollTeamsCommand.Build(),
                                                     CommandNames.RollTeamsCommand);
+            await CommandCreator.CreateCommandAsync(devGuild, setHLModeCommand.Build(),
+                                                    CommandNames.SetHLMode);
 
             await _client.CreateGlobalApplicationCommandAsync(captainSpinCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(medicSpinCommand.Build());
@@ -259,6 +267,7 @@ public class Program
             await _client.CreateGlobalApplicationCommandAsync(getMapPoolCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(getLeaderboardCommand.Build());
             await _client.CreateGlobalApplicationCommandAsync(rollTeamsCommand.Build());
+            await _client.CreateGlobalApplicationCommandAsync(setHLModeCommand.Build());
         }
         catch (Exception ex)
         {
@@ -329,6 +338,9 @@ public class Program
                     break;
                 case CommandNames.RollTeamsCommand:
                     await new RollTeamsCommand().PerformAsync(command, caller);
+                    break;
+                case CommandNames.SetHLMode:
+                    await new ConfigureHLCommand().PerformAsync(command, caller);
                     break;
             }
         }

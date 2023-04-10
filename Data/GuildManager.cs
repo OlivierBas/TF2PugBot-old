@@ -274,6 +274,16 @@ public static class GuildManager
             await DataManager.SaveDbAsync(SaveType.GuildData);
         }
     }
+    
+    public static async Task SetGuildHLModeAsync (ulong? guildId, bool value)
+    {
+        var guildData = _guildSettingsData.FirstOrDefault(g => g.GuildId == guildId);
+        if (guildData is not null)
+        {
+            guildData.HLMode = value;
+            await DataManager.SaveDbAsync(SaveType.GuildData);
+        }
+    }
 
     public static async Task<bool> UpdateGuildChannelDataAsync (ulong guildId, Team team, ulong channelId)
     {
