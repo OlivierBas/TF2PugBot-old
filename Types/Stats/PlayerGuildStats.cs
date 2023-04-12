@@ -7,4 +7,7 @@ public class PlayerGuildStats
     public int WonMedicSpins { get; set; }
     public int WonCaptainSpins { get; set; }
     public DateTime LastPlayed { get; set; } = DateTime.Now;
+
+    public float MedSpinsWonPercentage => MathF.Round((float)WonMedicSpins / GamesPlayed, 2);
+    public float CaptainSpinsWonPercentage => MathF.Round((float)WonCaptainSpins / GamesPlayed, 2);
 }

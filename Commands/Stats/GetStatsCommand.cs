@@ -52,9 +52,9 @@ public class GetStatsCommand : ICommand
     {
         embedBuilder.WithTitle($"{user.DisplayName}'s stats");
         embedBuilder.WithThumbnailUrl(user.GetDisplayAvatarUrl());
-        stringBuilder.AppendLine($"**Games played**: {psg.GamesPlayed}");
-        stringBuilder.AppendLine($"**Captain Spins Won**: {psg.WonCaptainSpins}");
-        stringBuilder.AppendLine($"**Medic Spins Won**: {psg.WonMedicSpins}");
+        stringBuilder.AppendLine($"**Games played**: {psg.GamesPlayed}" );
+        stringBuilder.AppendLine($"**Captain Spins Won**: {psg.WonCaptainSpins} ({psg.CaptainSpinsWonPercentage.ToString("P1")})");
+        stringBuilder.AppendLine($"**Medic Spins Won**: {psg.WonMedicSpins} ({psg.MedSpinsWonPercentage.ToString("P1")})");
         embedBuilder.WithFooter($"Last Played: {psg.LastPlayed.ToString("yyyy-MM-dd")}");
         embedBuilder.WithDescription(stringBuilder.ToString());
     }
